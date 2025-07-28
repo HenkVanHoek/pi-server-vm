@@ -1,7 +1,8 @@
 # create_master_vm.py
 import os
 from vm_manager import VMManager
-
+vbox_path = r"C:\Program Files\Oracle\VirtualBox"
+os.environ["PATH"] += os.pathsep + vbox_path
 ISO_PATH = "/home/hvhoek/isos/debian-12.5.0-amd64-netinst.iso"  # Adjust if needed
 VM_NAME = "pi-master-template"
 VM_DISK = f"{VM_NAME}.vdi"
