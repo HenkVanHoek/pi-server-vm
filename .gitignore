@@ -1,8 +1,20 @@
-scripts\pi-master-template.ova
-scripts\pi-master-template.vdi
-scripts\isos\*
+# Python cache en virtuele omgevingen
+__pycache__/
+*.pyc
+.venv/
+venv/
 
-/dist
-/releases
-/build
+# IDE configuratie
+.idea/
+.vscode/
+
+# Grote binaire projectbestanden
+# Deze mogen NOOIT in Git
 *.ova
+*.vdi
+scripts/isos/
+
+# Build/export mappen
+/dist/
+/releases/
+/build/
