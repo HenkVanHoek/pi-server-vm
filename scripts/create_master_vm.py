@@ -1,6 +1,6 @@
-# create_master_vm.py
+# scripts/create_master_vm.py
 """
-A script to create a master Debian VM template in VirtualBox.
+A cross-platform script to create a master Debian VM template in VirtualBox.
 
 This script automates the creation of a 'master' virtual machine. It will
 dynamically find and download the latest stable Debian net-installer ISO,
@@ -10,7 +10,9 @@ create a new VM, and attach the necessary storage.
 # Standard library imports
 import hashlib
 import os
+import platform
 import re
+import shutil
 import sys
 
 # Third-party imports
@@ -21,9 +23,6 @@ from vm_manager import VMManager
 
 
 # --- Configuration ---
-# Set path to your VirtualBox installation directory
-VBOX_PATH = r"C:\Program Files\Oracle\VirtualBox"
-
 # Dynamic ISO Configuration using Debian's permanent URL for the stable release
 STABLE_RELEASE_URL = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/"
 ISO_DIR = "isos"
@@ -35,64 +34,92 @@ VM_RAM_MB = 1024
 VM_CPUS = 1
 
 
+def setup_environment():
+    """
+    Finds the VBoxManage executable and adds its directory to the system PATH.
+    This makes the script cross-platform.
+
+    Returns:
+        bool: True if VBoxManage is found, False otherwise.
+    """
+    # 1. Best case: Is VBoxManage already in the system's PATH?
+    if shutil.which("VBoxManage"):
+        print("VBoxManage found in system PATH.")
+        return True
+
+    # 2. Fallback: Check known default installation locations.
+    system = platform.system()
+    vbox_path = None
+    if system == "Windows":
+        # On Windows, the .exe is required for os.path.exists
+        vbox_exe_name = "VBoxManage.exe"
+        # Program Files is the most common location
+        vbox_path = r"C:\Program Files\Oracle\VirtualBox"
+    elif system in ("Linux", "Darwin"):  # Darwin is the system name for macOS
+        vbox_exe_name = "VBoxManage"
+        # On macOS and Linux, it's usually in a standard PATH directory like /usr/local/bin,
+        # which shutil.which() should have already found. This is a fallback.
+        vbox_path = "/usr/local/bin"
+    else:
+        vbox_exe_name = None
+
+    if vbox_path and vbox_exe_name and os.path.exists(os.path.join(vbox_path, vbox_exe_name)):
+        print(f"Found VirtualBox at: {vbox_path}")
+        os.environ["PATH"] = f'{os.environ["PATH"]}{os.pathsep}{vbox_path}'
+        return True
+
+    # 3. Worst case: We could not find it.
+    print("Error: Could not find VBoxManage executable.", file=sys.stderr)
+    print("Please ensure VirtualBox is installed and its directory is in your system's PATH.", file=sys.stderr)
+    return False
+
+
 def get_latest_iso_info():
     """
-    Find the filename and checksum for the latest stable Debian netinst ISO.
-
-    This function scrapes the official Debian stable release page to find the
-    direct download link for the net-installer ISO and its corresponding
-    SHA256 checksum.
+    Finds the filename, URL, and checksum for the latest stable Debian netinst ISO.
 
     Raises:
         RuntimeError: If the ISO filename or checksum cannot be found.
         requests.exceptions.RequestException: If network requests fail.
 
     Returns:
-        tuple[str, str, str]: A tuple containing the ISO filename, the full
-        download URL, and the expected SHA256 checksum.
+        tuple[str, str, str] or tuple[None, None, None]: A tuple containing
+        the ISO filename, the full download URL, and the expected SHA256 checksum,
+        or None values on failure.
     """
     print(f"Checking for latest Debian release at: {STABLE_RELEASE_URL}")
+    try:
+        response = requests.get(STABLE_RELEASE_URL, timeout=30)
+        response.raise_for_status()
 
-    # Get the directory listing page for the latest release
-    response = requests.get(STABLE_RELEASE_URL, timeout=30)
-    response.raise_for_status()
+        iso_match = re.search(r'href="(debian-[\d.]+-amd64-netinst\.iso)"', response.text)
+        if not iso_match:
+            raise RuntimeError("Could not find the netinst ISO filename on Debian page.")
 
-    # Regex to find the netinst ISO filename, e.g., "debian-12.5.0-amd64-netinst.iso"
-    iso_match = re.search(r'href="(debian-[\d.]+-amd64-netinst\.iso)"', response.text)
-    if not iso_match:
-        raise RuntimeError("Could not find the netinst ISO filename on Debian page.")
+        iso_filename = iso_match.group(1)
+        iso_url = f"{STABLE_RELEASE_URL}{iso_filename}"
 
-    iso_filename = iso_match.group(1)
-    iso_url = f"{STABLE_RELEASE_URL}{iso_filename}"
+        checksum_url = f"{STABLE_RELEASE_URL}SHA256SUMS"
+        checksum_response = requests.get(checksum_url, timeout=30)
+        checksum_response.raise_for_status()
 
-    # Now find and download the checksums file
-    checksum_url = f"{STABLE_RELEASE_URL}SHA256SUMS"
-    checksum_response = requests.get(checksum_url, timeout=30)
-    checksum_response.raise_for_status()
+        checksum_pattern = f"^([a-f0-9]{{64}})\\s+{re.escape(iso_filename)}"
+        checksum_match = re.search(checksum_pattern, checksum_response.text, re.MULTILINE)
+        if not checksum_match:
+            raise RuntimeError(f"Could not find checksum for {iso_filename}.")
 
-    # Find the checksum for our specific ISO file from the SHA256SUMS content.
-    # The `re.escape` is crucial to safely handle dots in the filename.
-    checksum_pattern = f"^([a-f0-9]{{64}})\\s+{re.escape(iso_filename)}"
-    checksum_match = re.search(checksum_pattern, checksum_response.text, re.MULTILINE)
-    if not checksum_match:
-        raise RuntimeError(f"Could not find checksum for {iso_filename}.")
+        iso_sha256 = checksum_match.group(1)
+        print(f"Found latest version: {iso_filename}")
+        return iso_filename, iso_url, iso_sha256
 
-    iso_sha256 = checksum_match.group(1)
-
-    print(f"Found latest version: {iso_filename}")
-    print(f"Expected SHA256: {iso_sha256[:10]}...")  # Print a snippet
-
-    return iso_filename, iso_url, iso_sha256
+    except (requests.exceptions.RequestException, RuntimeError) as e:
+        print(f"Error finding latest ISO info: {e}", file=sys.stderr)
+        return None, None, None
 
 
 def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
     """
-    Verify a local ISO's integrity or download it if missing/corrupt.
-
-    Args:
-        iso_filename (str): The name of the ISO file.
-        iso_url (str): The URL to download the ISO from.
-        iso_sha256 (str): The expected SHA256 checksum.
+    Verifies a local ISO's integrity or downloads it if missing/corrupt.
 
     Returns:
         str or None: The full path to the valid ISO file, or None on failure.
@@ -116,9 +143,9 @@ def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
 
     print(f"Downloading {iso_filename}...")
     try:
-        with requests.get(iso_url, stream=True, timeout=30) as r:
+        with requests.get(iso_url, stream=True, timeout=60) as r:
             r.raise_for_status()
-            total_size = int(r.headers.get('content-length', 0)) # Now used
+            total_size = int(r.headers.get('content-length', 0))
             block_size = 8192
             downloaded_size = 0
 
@@ -126,7 +153,6 @@ def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
                 for chunk in r.iter_content(chunk_size=block_size):
                     f.write(chunk)
                     downloaded_size += len(chunk)
-                    # --- Progress bar logic restored ---
                     if total_size > 0:
                         done = int(50 * downloaded_size / total_size)
                         progress = (
@@ -137,7 +163,6 @@ def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
                         print(progress, end='')
 
             print("\nDownload complete.")
-        # After download, verify the new file.
         return verify_and_download_iso(iso_filename, iso_url, iso_sha256)
 
     except requests.exceptions.RequestException as e:
@@ -147,16 +172,14 @@ def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
 
 def main():
     """Main execution function."""
-    # Add VirtualBox to the system's PATH environment variable
-    os.environ["PATH"] = f'{os.environ["PATH"]}{os.pathsep}{VBOX_PATH}'
+    if not setup_environment():
+        return 1
+
     manager = VMManager()
 
     if manager.vm_exists(VM_NAME):
-        print(
-            f"Error: VM '{VM_NAME}' already exists. "
-            "Please remove it from VirtualBox first.",
-            file=sys.stderr
-        )
+        print(f"Error: VM '{VM_NAME}' already exists.", file=sys.stderr)
+        print("Please remove it from the VirtualBox Manager before proceeding.", file=sys.stderr)
         return 1
 
     try:
@@ -169,10 +192,10 @@ def main():
             return 1
 
     except (requests.exceptions.RequestException, RuntimeError) as e:
-        print(f"\nAn error occurred: {e}", file=sys.stderr)
+        print(f"\nAn unexpected error occurred: {e}", file=sys.stderr)
         return 1
 
-    print(f"\nCreating and starting master VM: {VM_NAME}") # Modified text
+    print(f"\nCreating and starting master VM: {VM_NAME}")
     manager.create_vm(
         name=VM_NAME,
         ram=VM_RAM_MB,
@@ -187,9 +210,11 @@ def main():
     print("Please complete the Debian installation manually now.")
     print("\nRemember to select the 'SSH server' and deselect any desktop environments.")
     print("After setup, the installer will shut down the VM.")
-    print("You can then create a clean snapshot for cloning.")
-    return 0
+    print("\nYour master template is now ready!")
+    print("You can now create clones using the cloning script:")
+    print(f"    python scripts/clone_vm.py <your-new-clone-name>")
 
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
