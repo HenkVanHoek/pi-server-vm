@@ -216,8 +216,27 @@ All administrative tasks **must** be performed using the `sudo` command by the `
 #### Default User and First Login
 
 - **Username:** `pivm`
-- **Default Password:** `PivmPwd`
+- **Default Password:** `pivmpwd`
 
+## Downloads
+
+For users who want to skip the manual installation and start with a pre-built virtual machine, a ready-to-use virtual appliance (`.ova` file) is available.
+
+This file can be imported directly into VirtualBox and contains a minimal, secure installation of Debian, configured according to the steps outlined in this guide.
+
+### Latest Release
+
+You can download the latest version of the `pi-server-template` appliance from the official **GitHub Releases page**.
+
+➡️ **[Download the latest release](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
+
+After downloading, simply double-click the `.ova` file or use the **File -> Import Appliance** menu in VirtualBox to get started.
+
+**Default Credentials:**
+- **Username:** `pivm`
+- **Password:** `pivmpwd`
+
+**Note:** For security, you will be required to change the password on your first login.
 **IMPORTANT:** For security, you will be **forced to change this password** the very first time you log in as `pivm`. The system will not let you proceed until you have set a new, private password.
 ## 📜 License
 
