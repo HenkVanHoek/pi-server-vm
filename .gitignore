@@ -1,0 +1,8 @@
+scripts\pi-master-template.ova
+scripts\pi-master-template.vdi
+scripts\isos\*
+
+/dist
+/releases
+/build
+*.ova
