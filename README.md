@@ -174,6 +174,13 @@ Open your Windows Command Prompt (cmd) or PowerShell and use the following comma
 
     Description:     serial:1a2b3c4d5e6f7890
 
+## Features
+
+- **Cross-Platform:** Works on Windows, macOS, and Linux without any configuration changes.
+- **Fully Automated Creation:** Creates a new VirtualBox VM, ready for OS installation.
+- **Dynamic ISO Downloader:** Automatically finds and downloads the latest stable Debian net-installer, so you never have to hunt for the right version.
+- **Unique Clones:** The cloning script ensures every new VM gets a unique MAC address and serial number, just like real hardware.
+- **Secure by Default:** The provided installation guide helps you create a secure template with a locked root account and a non-privileged user with `sudo` access.
 
 ### Cloning the Master Template
 
