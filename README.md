@@ -115,10 +115,10 @@ This is the most important step for creating a minimal server. On the "Software 
 
 ### 4. GRUB Boot Loader Installation (Critical Step)
 
-The GRUB boot loader allows the virtual machine to start.
+The GRUB bootloader allows the virtual machine to start.
 
 **Step 1: Install GRUB**  
-When asked to "Install the GRUB boot loader to the primary drive?", you must select **<Yes>**.
+When asked to "Install the GRUB bootloader to the primary drive?", you must select **<Yes>**.
 > ![Confirm GRUB Installation](docs/images/VirtualBox_pi-master-template-configure-grub-pc.png)
 
 **Step 2: Select the Boot Device**  
@@ -173,12 +173,52 @@ Open your Windows Command Prompt (cmd) or PowerShell and use the following comma
 *Expected output:*
 
     Description:     serial:1a2b3c4d5e6f7890
+
+
+### Cloning the Master Template
+
+Once you have a fully installed and configured `pi-master-template`, you can use it to create multiple, unique VM instances.
+
+A script, `clone_vm.py`, is provided to automate this process. It handles cloning the VM and ensuring the new clone gets its own unique MAC address and serial number, just like real Raspberry Pi hardware.
+
+#### Usage
+
+To clone the template, run the script from your command line, providing a name for the new VM as an argument.
+
+**Example:**
+To create a new virtual machine named `pi-server-01`:
+
+    python scripts/clone_vm.py pi-server-01
+
+To create another one named `pi-web-server`:
+
+    python scripts/clone_vm.py pi-web-server
+
+After the script completes, you can start your new VM from the VirtualBox Manager or via the command line:
+
+    VBoxManage startvm pi-server-01
+
 ## 🧪 Integration with PiSelfhosting
 
 You can combine this with [`piselfhosting-vm-test`](https://github.com/your-org/piselfhosting-vm-test) to validate the deployment of services to simulated Raspberry Pi devices in CI or manual test environments.
 
 ---
+### Security Configuration
 
+This virtual machine template is configured with security best practices in mind.
+
+#### Root Account is Locked
+
+By default, the `root` user account is **locked**. This means you cannot log in directly as `root` or use `su` to become the root user. This is a deliberate security measure to prevent direct superuser access.
+
+All administrative tasks **must** be performed using the `sudo` command by the `pivm` user.
+
+#### Default User and First Login
+
+- **Username:** `pivm`
+- **Default Password:** `PivmPwd`
+
+**IMPORTANT:** For security, you will be **forced to change this password** the very first time you log in as `pivm`. The system will not let you proceed until you have set a new, private password.
 ## 📜 License
 
 This project is licensed under the MIT License.
