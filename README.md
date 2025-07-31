@@ -58,3 +58,9 @@ Start your new VM from the VirtualBox Manager. It will automatically configure i
 ## Contributing
 
 We welcome contributions! Please see the `CONTRIBUTING.md` file for details on how to get started, report bugs, and submit changes.
+
+## Support This Project
+
+If you find this project useful and would like to help support its continued development, please consider becoming a sponsor. Your support is greatly appreciated!
+
+➡️ **[Sponsor @HenkVanHoek on GitHub](https://github.com/sponsors/HenkVanHoek)**
