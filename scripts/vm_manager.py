@@ -169,3 +169,4 @@ class VMManager:
         serial = self.generate_serial_number()
         self.run(f'VBoxManage modifyvm "{target}" --macaddress1 {new_mac}')
         self.run(f'VBoxManage modifyvm "{target}" --description "serial:{serial}"')
+        self.run(f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/hostname "{target}"')

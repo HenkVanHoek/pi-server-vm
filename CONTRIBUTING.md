@@ -1,0 +1,55 @@
+# How to Contribute to Pi Server VM
+
+First, thank you for considering a contribution! We welcome any help, whether it is reporting a bug, proposing a new feature, or submitting code changes.
+
+## Reporting Bugs
+
+- If you find a bug, please check the [Issues](https://github.com/HenkVanHoek/pi-server-vm/issues) page to see if it has already been reported.
+- If it has not, please open a new issue. Be sure to include:
+    - Your operating system (e.g., Windows 11, macOS Sonoma).
+    - The versions of VirtualBox and Python you are using.
+    - A clear description of the bug and the steps to reproduce it.
+    - Any relevant error messages or logs.
+
+## Suggesting Enhancements
+
+If you have an idea for a new feature or an improvement to an existing one, feel free to open an issue to start a discussion.
+
+## Development Setup
+
+To get started with developing the scripts locally, follow these steps:
+
+1.  **Fork the repository** on GitHub.
+2.  **Clone your fork** to your local machine:
+
+        git clone https://github.com/YourUsername/pi-server-vm.git
+        cd pi-server-vm
+
+3.  **Prerequisites:** Ensure you have [Python 3.8+](https://www.python.org/) and [VirtualBox 7.x](https://www.virtualbox.org/wiki/Downloads) installed.
+4.  **Create a Virtual Environment:**
+
+        python -m venv .venv
+        # On Windows
+        .venv\Scripts\activate
+        # On macOS/Linux
+        source .venv/bin/activate
+
+5.  **Install Dependencies:**
+
+        pip install requests pytest bump2version
+
+## Submitting Changes (Pull Requests)
+
+1.  Create a new branch for your feature or bugfix. For example:
+
+        git checkout -b feature/my-new-feature
+
+2.  Make your changes and commit them with a clear, descriptive commit message.
+3.  Push the branch to your fork on GitHub. For example:
+
+        git push origin feature/my-new-feature
+
+4.  Open a **Pull Request** from your branch to the **main** branch of the original repository.
+5.  Please provide a clear description of the changes you have made in the Pull Request.
+
+Thank you again for your contribution!
