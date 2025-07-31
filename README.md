@@ -17,7 +17,7 @@ This project allows you to quickly provision new, unique VM instances from a "go
 
 For users who want to skip the manual installation, a ready-to-use virtual appliance (`.ova` file) is available.
 
-➡️ **[Download the latest release (v1.2.0)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
+➡️ **[Download the latest release (v1.1.0)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
 
 After downloading, import the appliance using the **File -> Import Appliance** menu in VirtualBox.
 
@@ -58,9 +58,3 @@ Start your new VM from the VirtualBox Manager. It will automatically configure i
 ## Contributing
 
 We welcome contributions! Please see the `CONTRIBUTING.md` file for details on how to get started, report bugs, and submit changes.
-
-## Support This Project
-
-If you find this project useful and would like to help support its continued development, please consider becoming a sponsor. Your support is greatly appreciated!
-
-➡️ **[Sponsor @HenkVanHoek on GitHub](https://github.com/sponsors/HenkVanHoek)**
