@@ -1,7 +1,5 @@
 # Pi Server VM
 
-# Pi Server VM
-
 A set of cross-platform Python scripts to fully automate the creation and cloning of secure, minimal Debian virtual machines in **Oracle VirtualBox**. This project is designed to emulate a Raspberry Pi server environment, making it ideal for testing server software, network configurations, or any project designed for a Raspberry Pi without needing physical hardware.
 This project allows you to quickly provision new, unique VM instances from a "golden master" template, making it ideal for testing server software, network configurations, or any project designed for a Raspberry Pi environment.
 
