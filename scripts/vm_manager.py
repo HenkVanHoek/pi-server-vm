@@ -1,172 +1,159 @@
-# vm_manager.py
+# scripts/vm_manager.py
 """
-A module to provide a high-level interface for managing VirtualBox VMs.
+A module of helper functions to manage VirtualBox VMs.
 
-This manager class handles the creation, cloning, and modification of
-VirtualBox virtual machines using the VBoxManage command-line tool.
+This module provides a high-level, cross-platform interface for creating,
+cloning, and modifying VirtualBox virtual machines using the VBoxManage
+command-line tool.
 """
 
 import os
+import platform
 import random
-import re
+import shutil
 import subprocess
+import sys
+
+# --- Public Functions ---
 
 
-class VMManager:
-    """A collection of static methods to manage VirtualBox VMs."""
+def setup_environment():
+    """
+    Finds the VBoxManage executable and adds its directory to the system PATH.
+    """
+    if shutil.which("VBoxManage"):
+        print("VBoxManage found in system PATH.")
+        return True
 
-    @staticmethod
-    def run(cmd):
-        """
-        Execute a shell command and raise an exception if it fails.
+    system = platform.system()
+    vbox_path = None
+    if system == "Windows":
+        vbox_exe_name = "VBoxManage.exe"
+        vbox_path = r"C:\Program Files\Oracle\VirtualBox"
+    elif system in ("Linux", "Darwin"):
+        vbox_exe_name = "VBoxManage"
+        vbox_path = "/usr/local/bin"
+    else:
+        vbox_exe_name = None
 
-        Args:
-            cmd (str): The command to execute.
-        """
-        print(f"Running: {cmd}")
-        subprocess.run(cmd, shell=True, check=True)
+    if (
+        vbox_path
+        and vbox_exe_name
+        and os.path.exists(os.path.join(vbox_path, vbox_exe_name))
+    ):
+        print(f"Found VirtualBox at: {vbox_path}")
+        os.environ["PATH"] = f'{os.environ["PATH"]}{os.pathsep}{vbox_path}'
+        return True
 
-    @staticmethod
-    def vm_exists(name):
-        """
-        Check if a virtual machine with the given name already exists.
+    print("Error: Could not find VBoxManage executable.", file=sys.stderr)
+    print(
+        "Please ensure VirtualBox is installed and its directory is in your system's PATH.",
+        file=sys.stderr,
+    )
+    return False
 
-        Args:
-            name (str): The name of the VM to check.
 
-        Returns:
-            bool: True if the VM exists, False otherwise.
-        """
-        result = subprocess.run(
-            ["VBoxManage", "list", "vms"],
+def run(cmd):
+    """Execute a shell command and raise an exception if it fails."""
+    print(f"Running: {cmd}")
+    subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
+
+
+def vm_exists(name):
+    """Check if a virtual machine with the given name already exists."""
+    result = subprocess.run(
+        ["VBoxManage", "list", "vms"], capture_output=True, text=True, check=False
+    )
+    return f'"{name}"' in result.stdout
+
+
+def generate_pi_mac():
+    """Generate a random MAC address using a Raspberry Pi Foundation OUI."""
+    prefixes = ["b827eb", "dca632"]
+    prefix = random.choice(prefixes)
+    suffix = "".join(f"{random.randint(0x00, 0xFF):02x}" for _ in range(3))
+    return f"{prefix}{suffix}"
+
+
+def generate_serial_number():
+    """Generate a random 16-character hexadecimal string for the VM serial."""
+    return "".join(random.choices("0123456789abcdef", k=16))
+
+
+def get_first_bridged_adapter():
+    """Find the name of the first available bridged network adapter."""
+    result = subprocess.run(
+        ["VBoxManage", "list", "bridgedifs"], capture_output=True, text=True, check=True
+    )
+    for line in result.stdout.splitlines():
+        if line.strip().startswith("Name:"):
+            return line.split(":", 1)[1].strip()
+    raise RuntimeError("No bridged network adapter found.")
+
+
+def create_vm(name, ram, cpus, disk, iso, bridge=True):
+    """Creates, configures, and starts a new virtual machine."""
+    run(f'VBoxManage createvm --name "{name}" --register')
+    bridge_adapter = get_first_bridged_adapter() if bridge else "null"
+    run(
+        f'VBoxManage modifyvm "{name}" --memory {ram} --cpus {cpus} '
+        f'--boot1 dvd --nic1 bridged --bridgeadapter1="{bridge_adapter}"'
+    )
+    disk_path = os.path.abspath(disk)
+    iso_path = os.path.abspath(iso)
+    run(f'VBoxManage createhd --filename "{disk_path}" --size 8000')
+    run(
+        f'VBoxManage storagectl "{name}" --name="SATA Controller" '
+        "--add sata --controller IntelAhci"
+    )
+    run(
+        f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
+        f'--port 0 --device 0 --type hdd --medium "{disk_path}"'
+    )
+    run(
+        f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
+        f'--port 1 --device 0 --type dvddrive --medium "{iso_path}"'
+    )
+    mac = generate_pi_mac()
+    run(f'VBoxManage modifyvm "{name}" --macaddress1 {mac}')
+    serial = generate_serial_number()
+    run(f'VBoxManage modifyvm "{name}" --description "serial:{serial}"')
+    run(f'VBoxManage startvm "{name}"')
+
+
+def clone_vm(source, target, ram=None, cpus=None, disk_size=None):
+    """Clones an existing VM and applies customizations."""
+    run(f'VBoxManage clonevm "{source}" --name "{target}" --register')
+    new_mac = generate_pi_mac()
+    serial = generate_serial_number()
+    run(f'VBoxManage modifyvm "{target}" --macaddress1 {new_mac}')
+    run(f'VBoxManage modifyvm "{target}" --description "serial:{serial}"')
+    run(
+        f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/hostname "{target}"'
+    )
+
+    if ram:
+        run(f'VBoxManage modifyvm "{target}" --memory {ram}')
+    if cpus:
+        run(f'VBoxManage modifyvm "{target}" --cpus {cpus}')
+    if disk_size:
+        print(f"Creating and attaching a new {disk_size}GB secondary disk...")
+        vm_info_result = subprocess.run(
+            ["VBoxManage", "showvminfo", target, "--machinereadable"],
             capture_output=True,
             text=True,
-            check=False  # Do not fail if no VMs exist
+            check=True,
         )
-        return name in result.stdout
-
-    @staticmethod
-    def generate_pi_mac():
-        """
-        Generate a random MAC address using a Raspberry Pi Foundation OUI.
-
-        Returns:
-            str: A 12-character hex string MAC address (without separators).
-        """
-        # Official Raspberry Pi Foundation OUIs (Organizationally Unique Identifiers)
-        prefixes = ["b827eb", "dca632"]
-        prefix = random.choice(prefixes)
-        suffix = ''.join(f"{random.randint(0x00, 0xFF):02x}" for _ in range(3))
-        return f"{prefix}{suffix}"
-
-    @staticmethod
-    def generate_serial_number():
-        """
-        Generate a random 16-character hexadecimal string for the VM serial.
-
-        Returns:
-            str: A 16-character hex string.
-        """
-        return ''.join(random.choices('0123456789abcdef', k=16))
-
-    @staticmethod
-    def get_first_bridged_adapter():
-        """
-        Find the name of the first available bridged network adapter.
-
-        Raises:
-            RuntimeError: If no bridged network adapters are found.
-
-        Returns:
-            str: The name of the first bridged adapter.
-        """
-        result = subprocess.run(
-            ["VBoxManage", "list", "bridgedifs"],
-            capture_output=True,
-            text=True,
-            check=True
+        cfg_file_line = [
+            line
+            for line in vm_info_result.stdout.splitlines()
+            if line.startswith("CfgFile=")
+        ][0]
+        vm_dir = os.path.dirname(cfg_file_line.split("=", 1)[1].strip().strip('"'))
+        disk_path = os.path.join(vm_dir, f"{target}-disk2.vdi")
+        disk_size_mb = disk_size * 1024
+        run(f'VBoxManage createhd --filename "{disk_path}" --size {disk_size_mb}')
+        run(
+            f'VBoxManage storageattach "{target}" --storagectl="SATA Controller" '
+            f'--port 2 --device 0 --type hdd --medium "{disk_path}"'
         )
-        for line in result.stdout.splitlines():
-            if line.strip().startswith("Name:"):
-                return line.split(":", 1)[1].strip()
-        raise RuntimeError("No bridged network adapter found.")
-
-    @staticmethod
-    def get_serial(vm_name):
-        """
-        Retrieve the custom serial number from a VM's description.
-
-        Args:
-            vm_name (str): The name of the virtual machine.
-
-        Returns:
-            str or None: The serial number if found, otherwise None.
-        """
-        result = subprocess.run(
-            ["VBoxManage", "showvminfo", vm_name, "--machinereadable"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        match = re.search(r'description="serial:([0-9a-f]+)"', result.stdout)
-        return match.group(1) if match else None
-
-    def create_vm(self, name, ram, cpus, disk, iso, bridge=True):
-        """
-        Create, configure, and start a new virtual machine.
-
-        Args:
-            name (str): The name for the new VM.
-            ram (int): The amount of RAM in megabytes.
-            cpus (int): The number of CPU cores.
-            disk (str): The path for the virtual hard disk file.
-            iso (str): The path to the installation ISO.
-            bridge (bool): Whether to use a bridged network adapter.
-        """
-        self.run(f'VBoxManage createvm --name "{name}" --register')
-        bridge_adapter = self.get_first_bridged_adapter() if bridge else "null"
-        self.run(
-            f'VBoxManage modifyvm "{name}" --memory {ram} --cpus {cpus} '
-            f'--boot1 dvd --nic1 bridged --bridgeadapter1="{bridge_adapter}"'
-        )
-
-        disk_path = os.path.abspath(disk)
-        iso_path = os.path.abspath(iso)
-
-        self.run(f'VBoxManage createhd --filename "{disk_path}" --size 8000')
-        self.run(
-            f'VBoxManage storagectl "{name}" --name="SATA Controller" '
-            '--add sata --controller IntelAhci'
-        )
-        self.run(
-            f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
-            f'--port 0 --device 0 --type hdd --medium "{disk_path}"'
-        )
-        self.run(
-            f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
-            f'--port 1 --device 0 --type dvddrive --medium "{iso_path}"'
-        )
-
-        mac = self.generate_pi_mac()
-        self.run(f'VBoxManage modifyvm "{name}" --macaddress1 {mac}')
-
-        serial = self.generate_serial_number()
-        self.run(f'VBoxManage modifyvm "{name}" --description "serial:{serial}"')
-
-        # --- ADDED LINE: Start the VM after creation ---
-        self.run(f'VBoxManage startvm "{name}"')
-
-    def clone_vm(self, source, target):
-        """
-        Clone an existing VM and assign it a new MAC and serial number.
-
-        Args:
-            source (str): The name of the source VM to clone.
-            target (str): The name for the new cloned VM.
-        """
-        self.run(f'VBoxManage clonevm "{source}" --name "{target}" --register')
-        new_mac = self.generate_pi_mac()
-        serial = self.generate_serial_number()
-        self.run(f'VBoxManage modifyvm "{target}" --macaddress1 {new_mac}')
-        self.run(f'VBoxManage modifyvm "{target}" --description "serial:{serial}"')
-        self.run(f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/hostname "{target}"')

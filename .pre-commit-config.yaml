@@ -1,0 +1,30 @@
+# .pre-commit-config.yaml
+#
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # Standard hooks for file formatting and syntax
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace  # Removes trailing whitespace
+      - id: end-of-file-fixer    # Ensures files end in a newline
+      - id: check-yaml           # Checks YAML files for syntax errors
+      - id: check-added-large-files # Prevents committing large files (>500kb)
+
+  # A hook for formatting Python code according to PEP 8
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+
+  # A local hook to run our pytest unit tests
+  - repo: local
+    hooks:
+      - id: pytest-local
+        name: Run unit tests
+        entry: pytest
+        language: system
+        types: [python]
+        pass_filenames: false # We run all tests, not just the changed file

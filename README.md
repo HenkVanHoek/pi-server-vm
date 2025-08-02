@@ -13,6 +13,23 @@ This project allows you to quickly provision new, unique VM instances from a "go
 - **User-Friendly Console:** The IP address of the VM is displayed on the console login screen for easy, immediate SSH access.
 - **Secure by Default:** The template is configured with a locked root account and a standard user with `sudo` privileges whose password must be changed on first login.
 
+## Scope and Limitations
+
+It is important to understand what this project is designed for and what its limitations are.
+
+### CPU Emulation vs. Allocation
+
+The virtual machines created by this project run on the **x86-64 architecture** of your host computer, not the **ARM architecture** of a physical Raspberry Pi.
+
+When you specify the number of CPUs (e.g., `--cpus 4`), you are **allocating host CPU cores** to the VM. This is excellent for simulating the multicore environment of a modern Raspberry Pi to test the performance of multithreaded server applications.
+
+However, this setup cannot run software that is compiled exclusively for the ARM architecture.
+
+### Real-Time Processing
+
+This virtual environment is **not suitable for hard real-time applications**. Real-time processing requires precise, deterministic timing guarantees that are impossible to achieve through the multiple layers of software (Host OS, VirtualBox, Guest OS) involved in virtualization.
+
+This project is intended for testing server-side applications, web services, and other software that does not rely on microsecond-precision timing or direct hardware access (like GPIO pins).
 ## Downloads
 
 For users who want to skip the manual installation, a ready-to-use virtual appliance (`.ova` file) is available.

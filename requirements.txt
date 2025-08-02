@@ -1,0 +1,7 @@
+# Project Dependencies
+requests
+
+# Development and Testing Dependencies
+bump2version
+pytest
+pre-commit

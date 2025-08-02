@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pi-server-vm"
+version = "1.1.0"
+description = "Python scripts to automate the creation and cloning of Raspberry Pi virtual machine templates in VirtualBox."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT License" }
+authors = [
+  { name = "Henk Van Hoek", email = "b419ce9ae8@sinenomine.email" },
+]
+
+# This section lists your project's dependencies, similar to requirements.txt
+dependencies = [
+    "requests",
+]
+
+[project.optional-dependencies]
+# This section lists dependencies only needed for development and testing
+dev = [
+    "pytest",
+    "bump2version",
+]
+
+[tool.setuptools.packages.find]
+# This is the key part: it tells setuptools to find all packages
+# (like 'scripts') automatically.
+where = ["."]
