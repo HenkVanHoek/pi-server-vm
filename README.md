@@ -49,29 +49,81 @@ After downloading, import the appliance using the **File -> Import Appliance** m
 - [VirtualBox 7.x](https://www.virtualbox.org/wiki/Downloads)
 - Required Python packages:
 
-    pip install requests
+    pip install requests flask
 
 ### 1. Create the Master Template
 
 This only needs to be done once. The script will download the Debian installer and create the `pi-master-template` VM.
 
-    python scripts/create_master_vm.py
+    python -m scripts.create_master_vm
 
 A new VM window will open. Follow the on-screen instructions to complete the manual part of the Debian installation. A detailed guide with screenshots is available in `INSTALLATION_GUIDE.md`.
 
-### 2. Clone the Master Template
+### 2. Clone a VM
 
-Once the master template is ready, you can create as many unique clones as you need.
+Once the master template is ready, you can create as many unique clones as you need using either the command line or the new web interface.
+
+#### Option A: Using the Command Line
+This method is ideal for scripting and automation. All arguments (`--ram`, `--cpus`, `--disk-size`) are optional.
 
     # Example: Create a new VM named 'pi-web-server'
-    python scripts/clone_vm.py pi-web-server
+    python -m scripts.clone_vm pi-web-server
 
 Start your new VM from the VirtualBox Manager. It will automatically configure itself with the new hostname on its first boot.
 
+#### Option B: Using the Web Interface
+This method provides a user-friendly graphical interface for cloning.
+
+**1. Start the web server:**
+Navigate to the project root directory in your terminal and run the following command:
+
+    python -m webapp.app
+
+**2. Open your browser:**
+Navigate to `http://127.0.0.1:5000`.
+
+You will see a web form where you can enter the name and optional specifications for your new VM. The results of the clone operation will be displayed on the page.
+
 ## Verifying the VM Configuration
 
-(The verification section we wrote earlier can go here)
+After you have created the `pi-master-template`, you can verify that the custom MAC address and unique serial number were assigned correctly.
 
+#### Method 1: Using the VirtualBox GUI (Easiest)
+
+1.  Open the VirtualBox Manager.
+2.  Select the `pi-master-template` VM from the list.
+3.  Click on **Settings**.
+
+**To Check the MAC Address:**
+- Navigate to the **Network** section.
+- Select the **Adapter 1** tab.
+- Click **Advanced** to expand the details.
+- The **MAC Address** field will display the value. Verify that it begins with a Raspberry Pi prefix (e.g., `DCA632...` or `B827EB...`).
+
+**To Check the Serial Number:**
+- Navigate to the **General** section.
+- Select the **Basic** tab.
+- The **Description** field will contain the custom serial number, prefixed with `serial:`.
+
+#### Method 2: Using the Command Line
+
+Open your Windows Command Prompt (cmd) or PowerShell and use the following commands.
+
+**To Check the MAC Address:**
+
+    VBoxManage showvminfo pi-master-template | findstr "MAC"
+
+*Expected output:*
+
+    NIC 1:           MAC: DCA632A1B2C3, ...
+
+**To Check the Serial Number:**
+
+    VBoxManage showvminfo pi-master-template | findstr "serial"
+
+*Expected output:*
+
+    Description:     serial:1a2b3c4d5e6f7890
 ## Contributing
 
 We welcome contributions! Please see the `CONTRIBUTING.md` file for details on how to get started, report bugs, and submit changes.
