@@ -16,6 +16,7 @@ authors = [
 # This section lists your project's dependencies, similar to requirements.txt
 dependencies = [
     "requests",
+    "flask",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +24,7 @@ dependencies = [
 dev = [
     "pytest",
     "bump2version",
+    "pyinstaller"
 ]
 
 [tool.setuptools.packages.find]

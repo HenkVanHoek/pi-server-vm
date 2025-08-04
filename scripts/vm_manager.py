@@ -47,7 +47,7 @@ def setup_environment():
 
     print("Error: Could not find VBoxManage executable.", file=sys.stderr)
     print(
-        "Please ensure VirtualBox is installed and its directory is in your system's PATH.",
+        "Please ensure VirtualBox is installed and its directory is in your system PATH.",
         file=sys.stderr,
     )
     return False
@@ -121,17 +121,41 @@ def create_vm(name, ram, cpus, disk, iso, bridge=True):
     run(f'VBoxManage startvm "{name}"')
 
 
-def clone_vm(source, target, ram=None, cpus=None, disk_size=None):
-    """Clones an existing VM and applies customizations."""
+def clone_vm(
+    source,
+    target,
+    ram=None,
+    cpus=None,
+    disk_size=None,
+    user=None,
+    password=None,
+    start_vm=False,
+):
+    """
+    Clones an existing VM and applies all specified customizations.
+    """
     run(f'VBoxManage clonevm "{source}" --name "{target}" --register')
+
+    # Assign new unique identifiers
     new_mac = generate_pi_mac()
     serial = generate_serial_number()
     run(f'VBoxManage modifyvm "{target}" --macaddress1 {new_mac}')
     run(f'VBoxManage modifyvm "{target}" --description "serial:{serial}"')
+
+    # Set guest properties for the first-boot configuration script
     run(
         f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/hostname "{target}"'
     )
+    if user:
+        run(
+            f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/user "{user}"'
+        )
+    if password:
+        run(
+            f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/password "{password}"'
+        )
 
+    # Apply optional hardware customizations
     if ram:
         run(f'VBoxManage modifyvm "{target}" --memory {ram}')
     if cpus:
@@ -157,3 +181,8 @@ def clone_vm(source, target, ram=None, cpus=None, disk_size=None):
             f'VBoxManage storageattach "{target}" --storagectl="SATA Controller" '
             f'--port 2 --device 0 --type hdd --medium "{disk_path}"'
         )
+
+    # Conditionally start the VM
+    if start_vm:
+        print("Starting the new VM...")
+        run(f'VBoxManage startvm "{target}"')

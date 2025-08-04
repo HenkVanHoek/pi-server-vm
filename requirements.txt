@@ -1,7 +1,9 @@
 # Project Dependencies
-requests
+requests~=2.32.4
 
 # Development and Testing Dependencies
 bump2version
 pytest
 pre-commit
+
+Flask~=3.1.1

@@ -17,21 +17,22 @@ def index():
     form_data = request.form
 
     if request.method == "POST":
-        # --- Retrieve Form Data ---
+        # --- Retrieve Form Data (including new fields) ---
         vm_name = form_data.get("vm_name")
         ram = form_data.get("ram")
         cpus = form_data.get("cpus")
         disk_size = form_data.get("disk_size")
+        user = form_data.get("user")
+        password = form_data.get("password")
+        start = form_data.get("start")  # Will be 'on' if checked, otherwise None
 
         # --- Build the Command (Modern Package-Aware Approach) ---
-        # Run the script as a module to respect the installed package structure.
         command = [sys.executable, "-m", "scripts.clone_vm"]
 
         # Add the required vm_name argument.
         if vm_name:
             command.append(vm_name)
         else:
-            # If vm_name is missing, flash an error and reload the page.
             flash("VM Name is a required field.", "error")
             return render_template("index.html", form_data=form_data)
 
@@ -42,10 +43,15 @@ def index():
             command.extend(["--cpus", cpus])
         if disk_size:
             command.extend(["--disk-size", disk_size])
+        if user:
+            command.extend(["--user", user])
+        if password:
+            command.extend(["--password", password])
+        if start:
+            command.append("--start")
 
         try:
             # --- Run the Backend Script ---
-            # Execute the command and capture stdout and stderr.
             result = subprocess.run(
                 command,
                 capture_output=True,
@@ -69,6 +75,4 @@ def index():
 
 if __name__ == "__main__":
     # This block allows running the app directly for development.
-    # For production, a proper WSGI server like Gunicorn or Waitress should be used.
-    # host='0.0.0.0' makes the app accessible on your local network.
     app.run(debug=True, host="0.0.0.0")

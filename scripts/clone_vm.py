@@ -3,8 +3,8 @@
 A cross-platform script to clone the master Debian VM template.
 
 This script creates a new, configurable VM by cloning 'pi-master-template'.
-It supports command-line arguments to customize RAM, CPUs, and add a
-secondary disk, making it a flexible provisioning tool.
+It supports command-line arguments to customize RAM, CPUs, user, password,
+a secondary disk, and whether to start the VM after creation.
 """
 
 import argparse
@@ -17,32 +17,41 @@ SOURCE_VM_NAME = "pi-master-template"
 
 
 def parse_arguments():
-    """
-    Parses command-line arguments using argparse. This function is isolated
-    so it can be easily unit-tested.
-
-    Returns:
-        argparse.Namespace: An object containing the parsed arguments.
-    """
+    """Parses all command-line arguments using argparse."""
     parser = argparse.ArgumentParser(
-        description="Clone the master Pi VM template with custom hardware settings.",
+        description="Clone the master Pi VM template with custom hardware and user settings.",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("name", help="The name for the new cloned virtual machine.")
     parser.add_argument(
         "--ram",
         type=int,
-        help="Amount of RAM in megabytes for the new VM (e.g., 2048 for 2GB).\nDefaults to the setting from the master template (1024MB).",
+        help="Amount of RAM in megabytes for the new VM (e.g., 2048 for 2GB).\nDefaults to the master template setting.",
     )
     parser.add_argument(
         "--cpus",
         type=int,
-        help="Number of CPU cores for the new VM (e.g., 2 or 4).\nDefaults to the setting from the master template (1 CPU).",
+        help="Number of CPU cores for the new VM (e.g., 2 or 4).\nDefaults to the master template setting.",
     )
     parser.add_argument(
         "--disk-size",
         type=int,
         help="Size in gigabytes for a new, secondary virtual disk (e.g., 32 for 32GB).\nIf omitted, no secondary disk is created.",
+    )
+    parser.add_argument(
+        "--user",
+        type=str,
+        help="The username for the default user. Defaults to 'pivm'.",
+    )
+    parser.add_argument(
+        "--password",
+        type=str,
+        help="The password for the user.\nIf not set, you will be forced to change the default password on first login.",
+    )
+    parser.add_argument(
+        "--start",
+        action="store_true",
+        help="Automatically start the VM after it is cloned.",
     )
     return parser.parse_args()
 
@@ -52,10 +61,13 @@ def main():
     if not vm_manager.setup_environment():
         return 1
 
-    # We now call our dedicated, testable parsing function.
     args = parse_arguments()
 
-    # --- Pre-flight Checks ---
+    if args.password:
+        print("\n*** SECURITY WARNING ***")
+        print("You have provided a password on the command line.")
+        print("This can be saved in your shell history in plain text.\n")
+
     if not vm_manager.vm_exists(SOURCE_VM_NAME):
         print(
             f"Error: The source VM '{SOURCE_VM_NAME}' does not exist.", file=sys.stderr
@@ -68,7 +80,6 @@ def main():
         )
         return 1
 
-    # --- Cloning Process ---
     print(f"\nCloning '{SOURCE_VM_NAME}' to new VM '{args.name}'...")
 
     try:
@@ -78,25 +89,37 @@ def main():
             ram=args.ram,
             cpus=args.cpus,
             disk_size=args.disk_size,
+            user=args.user,
+            password=args.password,
+            start_vm=args.start,
         )
 
         print("\nCloning complete!")
-        print(
-            f"New VM '{args.name}' has been created with a unique MAC address and serial number."
-        )
+        print(f"New VM '{args.name}' has been created.")
         if args.ram:
             print(f"- RAM set to: {args.ram} MB")
         if args.cpus:
             print(f"- CPUs set to: {args.cpus}")
         if args.disk_size:
             print(f"- A new {args.disk_size}GB secondary disk has been attached.")
-        print(f'\nYou can now start it by running: VBoxManage startvm "{args.name}"')
+        if args.user or args.password:
+            user_disp = args.user or "pivm"
+            print(f"- User '{user_disp}' has been configured.")
+
+        if args.start:
+            print(f"\nVM '{args.name}' is starting up...")
+        else:
+            print(
+                f'\nYou can now start it by running: VBoxManage startvm "{args.name}"'
+            )
         return 0
 
     except subprocess.CalledProcessError as e:
         print("\n--- ERROR ---", file=sys.stderr)
-        print("An error occurred while running a VBoxManage command.", file=sys.stderr)
-        print(f"Command failed: {e.cmd}", file=sys.stderr)
+        print(
+            f"An error occurred while running a VBoxManage command: {e.cmd}",
+            file=sys.stderr,
+        )
         print(f"Error output:\n{e.stderr}", file=sys.stderr)
         return 1
 

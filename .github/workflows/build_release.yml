@@ -1,0 +1,70 @@
+# .github/workflows/build_release.yml
+
+# The official name of this software platform is spelled with a capital "H".
+name: Build and Release for GitHub
+
+# This workflow runs AFTER you create a new release on the GitHub website.
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    # Run this job on multiple operating systems to create native executables
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install project and build dependencies from pyproject.toml
+      run: |
+        python -m pip install --upgrade pip
+        # This command installs the project's dependencies AND the optional 'build' dependencies
+        pip install .[build]
+
+    - name: Set OS-dependent path separator for PyInstaller
+      id: set_separator
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          echo "separator=;" >> $GITHUB_OUTPUT
+        else
+          echo "separator=:" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --name pi-vm-cloner --onefile --add-data "webapp/templates${{ steps.set_separator.outputs.separator }}templates" webapp/app.py
+
+    - name: Determine executable name for release asset
+      id: get_asset_name
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          echo "asset_path=dist/pi-vm-cloner.exe" >> $GITHUB_OUTPUT
+          echo "asset_name=pi-vm-cloner-windows.exe" >> $GITHUB_OUTPUT
+        elif [[ "${{ runner.os }}" == "macOS" ]]; then
+          echo "asset_path=dist/pi-vm-cloner" >> $GITHUB_OUTPUT
+          echo "asset_name=pi-vm-cloner-macos" >> $GITHUB_OUTPUT
+        else
+          echo "asset_path=dist/pi-vm-cloner" >> $GITHUB_OUTPUT
+          echo "asset_name=pi-vm-cloner-linux" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # This URL is now guaranteed to exist because the workflow is triggered by a release event
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ${{ steps.get_asset_name.outputs.asset_path }}
+        asset_name: ${{ steps.get_asset_name.outputs.asset_name }}
+        asset_content_type: application/octet-stream

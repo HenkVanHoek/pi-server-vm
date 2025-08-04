@@ -84,6 +84,32 @@ Navigate to `http://127.0.0.1:5000`.
 
 You will see a web form where you can enter the name and optional specifications for your new VM. The results of the clone operation will be displayed on the page.
 
+## Understanding the Network Configuration
+
+To ensure reliability and prevent conflicts, the virtual machines created by this project use a **two-adapter network configuration**.
+
+#### Adapter 1: NAT (Internet Access)
+
+-   **Purpose:** This adapter connects the VM to the internet through a private, virtual router inside VirtualBox.
+-   **Function:** It allows the VM to download software and updates (e.g., using `apt`). The IP address on this adapter (usually `10.0.2.15`) is **not reachable** from your local network.
+
+#### Adapter 2: Host-Only (Management & Discovery)
+
+-   **Purpose:** This adapter connects the VM to a private, stable network that exists **only between your computer (the host) and your VMs.**
+-   **Function:** This is the interface used for management tasks like SSH and for discovery by other tools.
+-   **IP Range:** The VMs will get a stable IP address in the `192.168.56.0/24` range by default.
+
+### How to Find Your Virtual Pis
+
+Because the VMs live on this separate Host-Only network, you must scan that specific network to discover them. A standard network scan of your main home network (e.g., `192.168.178.0/24`) will **not** find them.
+
+**Example using `nmap`:**
+
+To discover all running virtual Pi VMs, run the following command from your host machine:
+
+    nmap -Pn 192.168.56.0/24
+
+This command will scan the Host-Only network and report all the virtual machines that are currently running, allowing you to find their IP addresses for SSH or for use with management tools like `PiSelfhosting`.
 ## Verifying the VM Configuration
 
 After you have created the `pi-master-template`, you can verify that the custom MAC address and unique serial number were assigned correctly.

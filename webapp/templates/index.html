@@ -10,33 +10,19 @@
         h1 { color: #444; }
         .form-group { margin-bottom: 1.25rem; }
         label { display: block; font-weight: bold; margin-bottom: 0.5rem; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        input[type="text"], input[type="number"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
         small { color: #666; }
+        .warning { color: #d9534f; }
         .btn { display: inline-block; background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; text-align: center; }
         .btn:hover { background-color: #0056b3; }
         .messages { list-style: none; padding: 0; margin: 0; }
-
-        /* --- Style Changes to Fix Linter Warnings --- */
-        /* Common styles for all message boxes */
-        .message-box {
-            padding: 1rem;
-            margin-top: 1.5rem;
-            border-radius: 5px;
-            border: 1px solid transparent;
-        }
-        /* Styles specific to success messages */
-        .success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-        /* Styles specific to error messages */
-        .error {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
+        .message-box { padding: 1rem; margin-top: 1.5rem; border-radius: 5px; border: 1px solid transparent; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
         pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
+        .checkbox-group { display: flex; align-items: center; margin-top: 1.5rem; }
+        .checkbox-group input[type="checkbox"] { margin-right: 10px; width: auto; }
+        .checkbox-group label { margin-bottom: 0; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -64,7 +50,28 @@
                 <input type="number" id="disk_size" name="disk_size" min="1" placeholder="e.g., 8" value="{{ form_data.get('disk_size', '') }}">
                 <small>Optional. If omitted, no secondary disk is created.</small>
             </div>
-            <button type="submit" class="btn">Clone VM</button>
+
+            <hr style="border: none; border-top: 1px solid #eee; margin: 2rem 0;">
+
+            <div class="form-group">
+                <label for="user">Username</label>
+                <input type="text" id="user" name="user" placeholder="Default: pivm" value="{{ form_data.get('user', '') }}">
+                <small>Optional. Sets the username for the default user.</small>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="new-password">
+                <small>Optional. If not set, you must change the default password on first login.</small>
+                <small class="warning"><b>Security Warning:</b> The password will be passed in plain text to the script.</small>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="start" name="start" {% if form_data.get('start') %}checked{% endif %}>
+                <label for="start">Start VM automatically after cloning</label>
+            </div>
+
+            <br>
+            <button type="submit" class="btn" style="margin-top: 1rem;">Clone VM</button>
         </form>
 
         <!-- Display flashed messages (success or error) -->
@@ -72,7 +79,6 @@
             {% if messages %}
                 <ul class="messages">
                 {% for category, message in messages %}
-                    <!-- This line now correctly applies both classes -->
                     <li class="message-box {{ category }}"><pre>{{ message }}</pre></li>
                 {% endfor %}
                 </ul>
