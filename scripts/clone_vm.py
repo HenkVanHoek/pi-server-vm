@@ -8,6 +8,7 @@ a secondary disk, and whether to start the VM after creation.
 """
 
 import argparse
+import shlex
 import subprocess
 import sys
 from scripts import vm_manager
@@ -116,8 +117,10 @@ def main():
 
     except subprocess.CalledProcessError as e:
         print("\n--- ERROR ---", file=sys.stderr)
+        # The 'e.cmd' attribute is only available on CalledProcessError
+        cmd_string = shlex.join(e.cmd) if hasattr(e, "cmd") else "N/A"
         print(
-            f"An error occurred while running a VBoxManage command: {e.cmd}",
+            f"An error occurred while running a VBoxManage command: {cmd_string}",
             file=sys.stderr,
         )
         print(f"Error output:\n{e.stderr}", file=sys.stderr)

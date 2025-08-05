@@ -13,21 +13,18 @@ authors = [
   { name = "Henk Van Hoek", email = "b419ce9ae8@sinenomine.email" },
 ]
 
-# This section lists your project's dependencies, similar to requirements.txt
 dependencies = [
     "requests",
     "flask",
 ]
 
 [project.optional-dependencies]
-# This section lists dependencies only needed for development and testing
 dev = [
     "pytest",
     "bump2version",
-    "pyinstaller"
+    "pyinstaller",
+    "pre-commit"
 ]
 
 [tool.setuptools.packages.find]
-# This is the key part: it tells setuptools to find all packages
-# (like 'scripts') automatically.
 where = ["."]
