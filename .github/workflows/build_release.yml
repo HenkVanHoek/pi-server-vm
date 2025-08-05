@@ -5,6 +5,10 @@ on:
         tags:
             - "v*.*.*" # Runs on version tags like v1.3.1, v1.4.0, etc.
 
+# This section grants the necessary permissions for the release job
+permissions:
+    contents: write
+
 jobs:
     # Job 1: Build the executables on all three platforms
     build:
