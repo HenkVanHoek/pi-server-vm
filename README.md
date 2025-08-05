@@ -1,6 +1,8 @@
 # Pi Server VM
 
 Python scripts to automate the creation and cloning of Raspberry Pi virtual machine templates in VirtualBox. This project simplifies setting up multiple, consistent Debian-based VMs for development and testing.
+For your convenience there are pre-compiled executables available if you don't want to go through the hassle of installing Python.
+
 
 ## Features
 

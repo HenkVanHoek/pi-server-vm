@@ -1,70 +1,68 @@
-# .github/workflows/build_release.yml
+name: Create GitHub Release with Cross-Platform Executables
 
-# The official name of this software platform is spelled with a capital "H".
-name: Build and Release for GitHub
-
-# This workflow runs AFTER you create a new release on the GitHub website.
 on:
-  release:
-    types: [created]
+    push:
+        tags:
+            - "v*.*.*" # Runs on version tags like v1.3.1, v1.4.0, etc.
 
 jobs:
-  build:
-    # Run this job on multiple operating systems to create native executables
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+    # Job 1: Build the executables on all three platforms
+    build:
+        name: Build on ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macos-latest, windows-latest]
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+        steps:
+            - name: Check out the repository code
+              uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+            - name: Set up Python 3.11
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
 
-    - name: Install project and build dependencies from pyproject.toml
-      run: |
-        python -m pip install --upgrade pip
-        # This command installs the project's dependencies AND the optional 'build' dependencies
-        pip install .[build]
+            - name: Install dependencies
+              run: pip install -e .[dev]
 
-    - name: Set OS-dependent path separator for PyInstaller
-      id: set_separator
-      run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
-          echo "separator=;" >> $GITHUB_OUTPUT
-        else
-          echo "separator=:" >> $GITHUB_OUTPUT
-        fi
+            - name: Build executables with PyInstaller
+              run: python build.py
 
-    - name: Build executable with PyInstaller
-      run: |
-        pyinstaller --name pi-vm-cloner --onefile --add-data "webapp/templates${{ steps.set_separator.outputs.separator }}templates" webapp/app.py
+            - name: Prepare artifact for upload
+              # On Windows, executables end with .exe. On Linux/macOS, they do not.
+              # We create a zip file for each OS to handle this consistently.
+              run: |
+                  if [ "$RUNNER_OS" == "Windows" ]; then
+                    7z a executables-${{ runner.os }}.zip ./dist/*
+                  else
+                    zip -r executables-${{ runner.os }}.zip ./dist
+                  fi
+              shell: bash
 
-    - name: Determine executable name for release asset
-      id: get_asset_name
-      run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
-          echo "asset_path=dist/pi-vm-cloner.exe" >> $GITHUB_OUTPUT
-          echo "asset_name=pi-vm-cloner-windows.exe" >> $GITHUB_OUTPUT
-        elif [[ "${{ runner.os }}" == "macOS" ]]; then
-          echo "asset_path=dist/pi-vm-cloner" >> $GITHUB_OUTPUT
-          echo "asset_name=pi-vm-cloner-macos" >> $GITHUB_OUTPUT
-        else
-          echo "asset_path=dist/pi-vm-cloner" >> $GITHUB_OUTPUT
-          echo "asset_name=pi-vm-cloner-linux" >> $GITHUB_OUTPUT
-        fi
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: executables-${{ runner.os }}
+                  path: executables-${{ runner.os }}.zip
 
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        # This URL is now guaranteed to exist because the workflow is triggered by a release event
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ steps.get_asset_name.outputs.asset_path }}
-        asset_name: ${{ steps.get_asset_name.outputs.asset_name }}
-        asset_content_type: application/octet-stream
+    # Job 2: Create the GitHub Release after all builds are successful
+    release:
+        name: Create GitHub Release
+        runs-on: ubuntu-latest
+        needs: build # This job will not run until the 'build' job is complete
+
+        steps:
+            - name: Download all build artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  path: artifacts # Downloads all artifacts into an 'artifacts' directory
+
+            - name: Create Release and Upload Assets
+              # This powerful action creates the release and attaches the files
+              uses: softprops/action-gh-release@v2
+              with:
+                  # This uses the content of the Git tag for the release notes
+                  generate_release_notes: true
+                  # Find all the zip files we created and upload them
+                  files: artifacts/**/*.zip
