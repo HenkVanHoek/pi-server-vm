@@ -1,93 +1,72 @@
 # Pi Server VM
 
-Python scripts to automate the creation and cloning of Raspberry Pi virtual machine templates in VirtualBox. This project simplifies setting up multiple, consistent Debian-based VMs for development and testing.
-For your convenience there are pre-compiled executables available if you don't want to go through the hassle of installing Python.
-
+A set of cross-platform Python scripts to fully automate the creation and cloning of secure, minimal Debian virtual machines in **Oracle VirtualBox**. This project is designed to emulate a Raspberry Pi server environment, making it ideal for testing server software, network configurations, or any project designed for a Raspberry Pi without needing physical hardware.
 
 ## Features
 
--   **`create_master_vm.py`**: A script to automate the creation of a base Debian VM template (`pi-master-template`). It handles unattended installation, configures SSH, and installs VirtualBox Guest Additions.
--   **`clone_vm.py`**: A powerful, cross-platform script to clone the master template. Customize the name of the new VM, RAM, CPUs, add a secondary disk, and set the default user/password, all from the command line.
--   **Cross-Platform**: Designed to work on Windows, macOS, and Linux.
+- **Cross-Platform:** Works on Windows, macOS, and Linux without any configuration changes.
+- **Fully Automated Creation:** Creates a new VirtualBox VM and dynamically downloads the latest stable Debian OS installer.
+- **Idempotent "Golden Master":** The master template is self-healing and can be safely started and updated without breaking its ability to be cloned.
+- **Intelligent Cloning:** Cloned VMs automatically configure a unique hostname on their first boot, making them distinct devices on your network.
+- **Network Discoverable:** Clones announce themselves on the local network using Avahi (mDNS), appearing as **hostname.local**, just like a real Raspberry Pi.
+- **User-Friendly Console:** The IP address of the VM is displayed on the console login screen for easy, immediate SSH access.
+- **Secure by Default:** The template is configured with a locked root account and a standard user with **sudo** privileges whose password must be changed on first login.
 
-## Requirements
+## Downloads
 
--   **Python 3.8+**
--   **Oracle VirtualBox**: The scripts rely on the `VBoxManage` command-line interface. Ensure VirtualBox is installed and `VBoxManage` is in the system PATH.
--   **Debian Netinstall ISO**: A network installation image for Debian is required for creating the master template.
+For users who want to skip the manual installation, a ready-to-use virtual appliance (**ova** file) is available.
 
-## Installation
+➡️ **[Download the latest release (v1.2.0)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
 
-1.  **Clone the repository:**
+After downloading, import the appliance using the **File -> Import Appliance** menu in VirtualBox.
 
-    git clone https://github.com/HenkVanHoek/pi-server-vm.git
-    cd pi-server-vm
+**Default Credentials:**
+- **Username:** pivm
+- **Password:** PivmPwd (You will be forced to change this on first login).
 
-2.  **Set up a virtual environment (recommended):**
+## Quick Start
 
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+1.  **Download** the latest `.ova` appliance and the executable for your operating system from the [**GitHub Releases page**](https://github.com/HenkVanHoek/pi-server-vm/releases/latest).
+2.  **Import** the `.ova` file into VirtualBox.
+3.  **Run** the `clone-vm` executable from your terminal to create a new virtual machine.
 
-3.  **Install the package in editable mode with development dependencies:**
+        # Example:
+        ./clone-vm-executable-name my-first-pi --ram 2048 --start
 
-    pip install -e .[dev]
+For detailed, step-by-step instructions for your specific operating system, please see the guides below:
 
-## Usage
+-   ➡️ **[Installation Guide for Windows](./docs/INSTALL_WINDOWS.md)**
+-   ➡️ **[Installation Guide for macOS](./docs/INSTALL_MACOS.md)**
+-   ➡️ **[Installation Guide for Linux](./docs/INSTALL_LINUX.md)**
 
-### 1. Create the Master VM Template
+## Scope and Limitations
 
-First, create the base template. You will need a Debian netinstall ISO.
+It is important to understand what this project is designed for and what its limitations are.
 
-    python scripts/create_master_vm.py /path/to/your/debian-12-netinst.iso
+### CPU Emulation vs. Allocation
 
-### 2. Clone the Master VM
+The virtual machines created by this project run on the **x86-64 architecture** of your host computer, not the **ARM architecture** of a physical Raspberry Pi.
 
-Once the `pi-master-template` exists, you can clone it to create new VMs.
+When you specify the number of CPUs (e.g., `--cpus 4`), you are **allocating host CPU cores** to the VM. This is excellent for simulating the **multicore** environment of a modern Raspberry Pi to test the performance of **multithreaded** server applications.
 
-**Basic clone:**
+However, this setup cannot run software that is compiled exclusively for the ARM architecture.
 
-    python scripts/clone_vm.py my-new-vm
+### Real-Time Processing
 
-**Clone with customizations:**
+This virtual environment is **not suitable for hard real-time applications**. Real-time processing requires precise, deterministic timing guarantees that are impossible to achieve through the multiple layers of software (Host OS, VirtualBox, Guest OS) involved in virtualization.
 
-    python scripts/clone_vm.py my-powerful-vm \
-        --ram 4096 \
-        --cpus 4 \
-        --disk-size 32 \
-        --user myuser \
-        --password mypassword \
-        --start
+This project is intended for testing server-side applications, web services, and other software that does not rely on microsecond-precision timing or direct hardware access (like GPIO pins).
 
-## Building the Executables
+## Verifying the VM Configuration
 
-This project uses PyInstaller to create standalone executables. A simple build script is provided to automate the process.
-
-1.  **Ensure you have installed the development dependencies:**
-
-    pip install -e .[dev]
-
-2.  **Run the build script:**
-
-    python build.py
-
-The final executables will be placed in the `dist/` directory.
-
-## Using the Pre-compiled Executables
-
-For users who do not have a Python environment, pre-compiled executables are available. These tools allow you to manage VMs without any programming knowledge.
-
-### Prerequisites
-
-**You MUST have Oracle VirtualBox installed on your system.**
-
-The scripts depend on the `VBoxManage` command-line tool that is included with VirtualBox. The executable will automatically search for it in the system PATH and in the default VirtualBox installation directory.
-
--   Download VirtualBox: [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/wiki/Downloads)
+(The verification section we wrote earlier can go here)
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
+We welcome contributions! Please see the **CONTRIBUTING.md** file for details on how to get started, report bugs, and submit changes.
 
-## License
+## Support This Project
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+If you find this project useful and would like to help support its continued development, please consider becoming a sponsor. Your support is greatly appreciated!
+
+➡️ **[Sponsor @HenkVanHoek on GitHub](https://github.com/sponsors/HenkVanHoek)**

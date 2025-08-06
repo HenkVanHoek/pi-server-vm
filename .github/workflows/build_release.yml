@@ -1,3 +1,5 @@
+# .github/workflows/build_release.yml
+
 name: Create GitHub Release with Cross-Platform Executables
 
 on:
@@ -5,12 +7,10 @@ on:
         tags:
             - "v*.*.*" # Runs on version tags like v1.3.1, v1.4.0, etc.
 
-# This section grants the necessary permissions for the release job
 permissions:
     contents: write
 
 jobs:
-    # Job 1: Build the executables on all three platforms
     build:
         name: Build on ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
@@ -33,40 +33,43 @@ jobs:
             - name: Build executables with PyInstaller
               run: python build.py
 
-            - name: Prepare artifact for upload
-              # On Windows, executables end with .exe. On Linux/macOS, they do not.
-              # We create a zip file for each OS to handle this consistently.
+            # --- CORRECTED ARTIFACT PREPARATION ---
+            - name: Package executables for release
               run: |
                   if [ "$RUNNER_OS" == "Windows" ]; then
-                    7z a executables-${{ runner.os }}.zip ./dist/*
+                    # For Windows, create a .zip archive
+                    7z a executables-Windows.zip ./dist/*
                   else
-                    zip -r executables-${{ runner.os }}.zip ./dist
+                    # For Linux and macOS, create a .tar.gz archive
+                    # This preserves executable permissions.
+                    tar -czvf executables-${{ runner.os }}.tar.gz -C dist .
                   fi
               shell: bash
 
+            # --- CORRECTED ARTIFACT UPLOAD ---
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
               with:
+                  # The name is now generic, the path will be specific
                   name: executables-${{ runner.os }}
-                  path: executables-${{ runner.os }}.zip
+                  # Use a wildcard to find the correct archive type
+                  path: executables-${{ runner.os }}.*
 
-    # Job 2: Create the GitHub Release after all builds are successful
     release:
         name: Create GitHub Release
         runs-on: ubuntu-latest
-        needs: build # This job will not run until the 'build' job is complete
+        needs: build
 
         steps:
             - name: Download all build artifacts
               uses: actions/download-artifact@v4
               with:
-                  path: artifacts # Downloads all artifacts into an 'artifacts' directory
+                  path: artifacts
 
+            # --- CORRECTED FILE UPLOAD ---
             - name: Create Release and Upload Assets
-              # This powerful action creates the release and attaches the files
               uses: softprops/action-gh-release@v2
               with:
-                  # This uses the content of the Git tag for the release notes
                   generate_release_notes: true
-                  # Find all the zip files we created and upload them
-                  files: artifacts/**/*.zip
+                  # Use a glob pattern to find all archive types (.zip and .tar.gz)
+                  files: artifacts/**/*.*
