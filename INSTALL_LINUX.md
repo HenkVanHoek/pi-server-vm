@@ -4,7 +4,36 @@ This guide provides instructions for using the `pi-server-vm` executables on a L
 
 ### Prerequisites
 
-(The Prerequisites section is still correct and does not need to be changed)
+#### 1. Update Your System
+
+Open a terminal and run the following commands to update your package lists and installed packages:
+
+    sudo apt update
+    sudo apt upgrade -y
+
+#### 2. Install VirtualBox & Required Components
+
+Install VirtualBox, the Guest Additions ISO, and ensure your user is in the correct group.
+
+    sudo apt install virtualbox virtualbox-guest-additions-iso -y
+
+    # Replace 'your-username' with your actual Ubuntu username
+    sudo adduser your-username vboxusers
+
+**IMPORTANT:** You must **log out and log back in** for the group change to take effect.
+
+#### 3. Configure VirtualBox Networking (One-Time Setup)
+
+The virtual machines require a private network for management and discovery. This "Host-Only Network" is not created by default and must be set up once.
+
+1.  Open the **VirtualBox** application.
+2.  Go to the main menu: **File -> Tools -> Network Manager**.
+3.  Select the **Host-only Networks** tab.
+4.  Click the **Create** button.
+5.  A new network (e.g., 'vboxnet0') will appear. Select it.
+6.  Ensure the **DHCP Server** is enabled for this network. You can check this on the "DHCP Server" tab and click "Apply" if you make changes. The default IP settings are fine.
+
+Your system is now ready to host the virtual machines.
 
 ### Procedure
 
@@ -25,7 +54,7 @@ The command-line tools are provided in a standard tarball archive.
 
         tar -xvzf executables-Linux.tar.gz
 
-    This will create a new folder (likely named `dist` or similar) containing the `create-master-vm` and `clone-vm` tools. The files will already be executable.
+    This will create a new folder containing the `create-master-vm` and `clone-vm` tools, which will already be executable.
 
 #### 3. Import the Master Template Appliance
 
@@ -45,8 +74,5 @@ Now you are ready to create your first clone.
 
         # Example: Create a new VM named 'pi-test-linux'
         ./clone-vm pi-test-linux
-
-        # Example: Create a more powerful VM and start it immediately
-        ./clone-vm my-powerful-pi --ram 4096 --cpus 4 --start
 
 Your new virtual Pi will be created and will appear in the VirtualBox Manager, ready to use.
