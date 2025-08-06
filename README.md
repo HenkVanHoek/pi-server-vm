@@ -16,7 +16,7 @@ A set of cross-platform Python scripts to fully automate the creation and clonin
 
 For users who want to skip the manual installation, a ready-to-use virtual appliance (**ova** file) is available.
 
-➡️ **[Download the latest release (v1.2.0)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
+➡️ **[Download the latest release (v1.3.1)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
 
 After downloading, import the appliance using the **File -> Import Appliance** menu in VirtualBox.
 
