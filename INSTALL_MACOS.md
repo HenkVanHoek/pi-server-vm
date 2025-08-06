@@ -10,7 +10,7 @@ The scripts rely on the `VBoxManage` command-line tool. Download and install the
 
 - **[Download VirtualBox](https://www.virtualbox.org/wiki/Downloads)**
 
-After installing, VirtualBox is typically located in your `/Applications` folder, and its command-line tools are often automatically added to the system PATH.
+The installer will place VirtualBox in your `/Applications` folder and make its command-line tools available in the system PATH.
 
 ### Procedure
 
@@ -18,25 +18,25 @@ After installing, VirtualBox is typically located in your `/Applications` folder
 
 Go to the [GitHub Releases page](https://github.com/HenkVanHoek/pi-server-vm/releases/latest) for this project.
 
-Download the following files for the latest release:
--   `pi-master-template-vX.X.X.ova`
--   `create-master-vm-macos-amd64`
--   `clone-vm-macos-amd64`
+You will need to download **two** files for the latest release:
+-   `pi-master-template-vX.X.X.ova` (The virtual machine template)
+-   `executables-macOS.tar.gz` (The command-line tools)
 
-#### 2. Make the Executables Runnable
+#### 2. Extract the Executables
 
-By default, downloaded files are not marked as executable. You need to set the permission.
+The command-line tools are provided in a standard tarball archive.
 
 1.  Open the **Terminal** app.
-2.  Navigate to your `Downloads` folder (or wherever you saved the files).
-3.  Run the `chmod` command to add the execute permission:
+2.  Navigate to your `Downloads` folder.
+3.  Run the `tar` command to extract the archive:
 
-        chmod +x create-master-vm-macos-amd64
-        chmod +x clone-vm-macos-amd64
+        tar -xvzf executables-macOS.tar.gz
+
+    This will create a new folder (likely named `dist` or similar) containing the `create-master-vm` and `clone-vm` tools. The files will already be executable.
 
 #### 3. Import the Master Template Appliance
 
-You must first import the pre-built `.ova` file into VirtualBox. This will create the `pi-master-template` VM that the cloning script depends on.
+You must first import the pre-built `.ova` file into VirtualBox.
 
 1.  Open the VirtualBox application.
 2.  Go to the menu **File -> Import Appliance...**
@@ -47,13 +47,13 @@ You must first import the pre-built `.ova` file into VirtualBox. This will creat
 
 Now you are ready to create your first clone.
 
-1.  In your Terminal, from the same folder where you downloaded the files, run the `clone-vm` executable.
-2.  Provide a name for your new VM and any optional parameters.
+1.  In your Terminal, navigate into the folder where you extracted the executables.
+2.  Run the `clone-vm` executable, providing a name for your new VM and any optional parameters.
 
         # Example: Create a new VM named 'pi-test-macos'
-        ./clone-vm-macos-amd64 pi-test-macos
+        ./clone-vm pi-test-macos
 
         # Example: Create a more powerful VM and start it immediately
-        ./clone-vm-macos-amd64 my-powerful-pi --ram 4096 --cpus 4 --start
+        ./clone-vm my-powerful-pi --ram 4096 --cpus 4 --start
 
 Your new virtual Pi will be created and will appear in the VirtualBox Manager, ready to use.

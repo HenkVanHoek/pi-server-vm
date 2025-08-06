@@ -1,17 +1,6 @@
-## Quick Start
+# Installation and Usage on Windows
 
-1.  **Download** the latest `.ova` appliance and the executable for your operating system from the [**GitHub Releases page**](https://github.com/HenkVanHoek/pi-server-vm/releases/latest).
-2.  **Import** the `.ova` file into VirtualBox.
-3.  **Run** the `clone-vm` executable from your terminal to create a new virtual machine.
-
-    # Example:
-    ./clone-vm-executable-name my-first-pi --ram 2048 --start
-
-For detailed, step-by-step instructions for your specific operating system, please see the guides below:
-[dist](../dist)
--   ➡️ **[Installation Guide for Windows](INSTALL_WINDOWS.md)**
--   ➡️ **[Installation Guide for macOS](INSTALL_MACOS.md)**
--   ➡️ **[Installation Guide for Linux](INSTALL_LINUX.md)**
+This guide provides instructions for using the `pi-server-vm` executables on a Windows 10 or Windows 11 system.
 
 ### Prerequisites
 
@@ -21,7 +10,7 @@ The scripts rely on the `VBoxManage.exe` command-line tool. Download and install
 
 - **[Download VirtualBox](https://www.virtualbox.org/wiki/Downloads)**
 
-During installation, ensure that the "VirtualBox Application" and "VirtualBox Command Line Utilities" are selected for installation. It is also recommended to allow the installer to add its location to the system PATH.
+During installation, ensure that the "VirtualBox Application" and "VirtualBox Command Line Utilities" are selected for installation.
 
 ### Procedure
 
@@ -29,32 +18,38 @@ During installation, ensure that the "VirtualBox Application" and "VirtualBox Co
 
 Go to the [GitHub Releases page](https://github.com/HenkVanHoek/pi-server-vm/releases/latest) for this project.
 
-Download the following files for the latest release:
--   `pi-master-template-vX.X.X.ova`
--   `create-master-vm-windows-amd64.exe`
--   `clone-vm-windows-amd64.exe`
+You will need to download **two** files for the latest release:
+-   `pi-master-template-vX.X.X.ova` (The virtual machine template)
+-   `executables-Windows.zip` (The command-line tools)
 
-#### 2. Import the Master Template Appliance
+#### 2. Extract the Executables
 
-You must first import the pre-built `.ova` file into VirtualBox. This will create the `pi-master-template` VM that the cloning script depends on.
+The command-line tools are provided in a zip archive.
+
+1.  Navigate to your `Downloads` folder.
+2.  Right-click on `executables-Windows.zip` and select **"Extract All..."**.
+3.  This will create a new folder containing the `create-master-vm.exe` and `clone-vm.exe` tools.
+
+#### 3. Import the Master Template Appliance
+
+You must first import the pre-built `.ova` file into VirtualBox.
 
 1.  Open the VirtualBox application.
 2.  Go to the menu **File -> Import Appliance...**
 3.  Select the `pi-master-template-vX.X.X.ova` file you downloaded.
 4.  Follow the on-screen prompts to complete the import.
 
-#### 3. Run the Cloning Executable
+#### 4. Run the Cloning Executable
 
 You are now ready to create your first clone. The executables can be run directly from a Command Prompt (cmd) or PowerShell.
 
-1.  Open a terminal and navigate to your `Downloads` folder (or wherever you saved the files).
-2.  Run the `clone-vm` executable.
-3.  Provide a name for your new VM and any optional parameters.
+1.  Open a terminal and navigate into the folder where you extracted the executables.
+2.  Run the `clone-vm` executable, providing a name for your new VM and any optional parameters.
 
         # Example: Create a new VM named 'pi-test-windows'
-        .\clone-vm-windows-amd64.exe pi-test-windows
+        .\clone-vm.exe pi-test-windows
 
         # Example: Create a more powerful VM and start it immediately
-        .\clone-vm-windows-amd64.exe my-powerful-pi --ram 4096 --cpus 4 --start
+        .\clone-vm.exe my-powerful-pi --ram 4096 --cpus 4 --start
 
 Your new virtual Pi will be created and will appear in the Oracle VM VirtualBox Manager, ready to use.
