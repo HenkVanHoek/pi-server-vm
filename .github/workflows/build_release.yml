@@ -5,18 +5,27 @@ name: Create GitHub Release with Cross-Platform Executables
 on:
     push:
         tags:
-            - "v*.*.*" # Runs on version tags like v1.3.1, v1.4.0, etc.
+            - "v*.*.*"
 
 permissions:
     contents: write
 
 jobs:
     build:
-        name: Build on ${{ matrix.os }}
-        runs-on: ${{ matrix.os }}
+        name: Build on ${{ matrix.os-name }}
+        runs-on: ${{ matrix.os-vtu }}
         strategy:
             matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
+                include:
+                    - os-name: Linux
+                      os-vtu: ubuntu-latest
+                      asset-ext: tar.gz
+                    - os-name: macOS
+                      os-vtu: macos-latest
+                      asset-ext: tar.gz
+                    - os-name: Windows
+                      os-vtu: windows-latest
+                      asset-ext: zip
 
         steps:
             - name: Check out the repository code
@@ -31,29 +40,27 @@ jobs:
               run: pip install -e .[dev]
 
             - name: Build executables with PyInstaller
+              # We use a build.py script for more control
               run: python build.py
 
-            # --- CORRECTED ARTIFACT PREPARATION ---
-            - name: Package executables for release
-              run: |
-                  if [ "$RUNNER_OS" == "Windows" ]; then
-                    # For Windows, create a .zip archive
-                    7z a executables-Windows.zip ./dist/*
-                  else
-                    # For Linux and macOS, create a .tar.gz archive
-                    # This preserves executable permissions.
-                    tar -czvf executables-${{ runner.os }}.tar.gz -C dist .
-                  fi
-              shell: bash
+            # This step creates a directory to hold our assets
+            - name: Create package directory
+              run: mkdir package
 
-            # --- CORRECTED ARTIFACT UPLOAD ---
+            # This step uses a dedicated Action to create the correct archive type
+            - name: Create Archive
+              uses: thedoctor0/zip-release@master
+              with:
+                  type: '${{ matrix.asset-ext }}'
+                  directory: 'dist'
+                  path: '.'
+                  filename: '../package/executables-${{ matrix.os-name }}.${{ matrix.asset-ext }}'
+
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
               with:
-                  # The name is now generic, the path will be specific
-                  name: executables-${{ runner.os }}
-                  # Use a wildcard to find the correct archive type
-                  path: executables-${{ runner.os }}.*
+                  name: executables-${{ matrix.os-name }}
+                  path: ./package/*
 
     release:
         name: Create GitHub Release
@@ -66,10 +73,9 @@ jobs:
               with:
                   path: artifacts
 
-            # --- CORRECTED FILE UPLOAD ---
             - name: Create Release and Upload Assets
               uses: softprops/action-gh-release@v2
               with:
                   generate_release_notes: true
-                  # Use a glob pattern to find all archive types (.zip and .tar.gz)
-                  files: artifacts/**/*.*
+                  # This pattern is now more robust and will find any file
+                  files: artifacts/**/*
