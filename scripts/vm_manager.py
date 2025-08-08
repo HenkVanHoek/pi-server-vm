@@ -1,29 +1,23 @@
 # scripts/vm_manager.py
 """
-A module of helper functions to manage VirtualBox VMs.
-
-This module provides a high-level, cross-platform interface for creating,
-cloning, and modifying VirtualBox virtual machines using the VBoxManage
-command-line tool.
+A module of helper functions to manage VirtualBox VMs using a simple,
+single Bridged Adapter network configuration.
 """
 
 import os
 import platform
 import random
-import shlex
 import shutil
 import subprocess
 import sys
+
 
 # --- Public Functions ---
 
 
 def setup_environment():
-    """
-    Finds the VBoxManage executable and adds its directory to the system PATH.
-    """
+    """Finds the VBoxManage executable and adds its directory to the system PATH."""
     if shutil.which("VBoxManage"):
-        print("VBoxManage found in system PATH.")
         return True
 
     system = platform.system()
@@ -42,25 +36,17 @@ def setup_environment():
         and vbox_exe_name
         and os.path.exists(os.path.join(vbox_path, vbox_exe_name))
     ):
-        print(f"Found VirtualBox at: {vbox_path}")
         os.environ["PATH"] = f'{os.environ["PATH"]}{os.pathsep}{vbox_path}'
         return True
 
     print("Error: Could not find VBoxManage executable.", file=sys.stderr)
-    print(
-        "Please ensure VirtualBox is installed and its directory is in the system PATH.",
-        file=sys.stderr,
-    )
     return False
 
 
-def run(cmd_list):
-    """
-    Execute a command and raise an exception if it fails.
-    Expects cmd_list to be a list of arguments.
-    """
-    print(f"Running: {shlex.join(cmd_list)}")
-    subprocess.run(cmd_list, check=True, capture_output=True, text=True)
+def run(cmd):
+    """Execute a shell command and raise an exception if it fails."""
+    print(f"Running: {cmd}")
+    subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
 
 
 def vm_exists(name):
@@ -84,102 +70,52 @@ def generate_serial_number():
     return "".join(random.choices("0123456789abcdef", k=16))
 
 
-def get_host_only_adapter_name():
-    """Finds the name of the first available Host-Only network adapter."""
+def get_first_bridged_adapter():
+    """Find the name of the first available bridged network adapter."""
     result = subprocess.run(
-        ["VBoxManage", "list", "hostonlyifs"],
-        capture_output=True,
-        text=True,
-        check=True,
+        ["VBoxManage", "list", "bridgedifs"], capture_output=True, text=True, check=True
     )
     for line in result.stdout.splitlines():
         if line.strip().startswith("Name:"):
             return line.split(":", 1)[1].strip()
-    raise RuntimeError("No Host-Only network adapter found. Please create one.")
+    raise RuntimeError("No bridged network adapter found.")
 
 
 def create_vm(name, ram, cpus, disk, iso):
-    """
-    Creates and configures a new virtual machine with the standard network setup.
-    """
-    run(["VBoxManage", "createvm", "--name", name, "--register"])
-    host_only_adapter = get_host_only_adapter_name()
+    """Creates, configures, and starts a new VM with a single bridged adapter."""
+    run(f'VBoxManage createvm --name "{name}" --register')
 
+    bridge_adapter_name = get_first_bridged_adapter()
+    # Programmatically set Promiscuous Mode to 'Allow All' for better network discovery.
     run(
-        [
-            "VBoxManage",
-            "modifyvm",
-            name,
-            "--memory",
-            str(ram),
-            "--cpus",
-            str(cpus),
-            "--boot1",
-            "dvd",
-            "--nic1",
-            "nat",  # Adapter 1: NAT for internet access
-            "--nic2",
-            "hostonly",  # Adapter 2: Host-Only for management
-            f"--hostonlyadapter2",
-            host_only_adapter,
-        ]
+        f'VBoxManage modifyvm "{name}" --memory {ram} --cpus {cpus} '
+        f'--boot1 dvd --nic1 bridged --bridgeadapter1="{bridge_adapter_name}" '
+        f"--nicpromisc1 allow-all"
     )
 
     disk_path = os.path.abspath(disk)
     iso_path = os.path.abspath(iso)
-    run(["VBoxManage", "createhd", "--filename", disk_path, "--size", "8000"])
+    run(f'VBoxManage createhd --filename "{disk_path}" --size 8000')
     run(
-        [
-            "VBoxManage",
-            "storagectl",
-            name,
-            "--name",
-            "SATA Controller",
-            "--add",
-            "sata",
-            "--controller",
-            "IntelAhci",
-        ]
+        f'VBoxManage storagectl "{name}" --name="SATA Controller" '
+        "--add sata --controller IntelAhci"
     )
     run(
-        [
-            "VBoxManage",
-            "storageattach",
-            name,
-            "--storagectl",
-            "SATA Controller",
-            "--port",
-            "0",
-            "--device",
-            "0",
-            "--type",
-            "hdd",
-            "--medium",
-            disk_path,
-        ]
+        f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
+        f'--port 0 --device 0 --type hdd --medium "{disk_path}"'
     )
     run(
-        [
-            "VBoxManage",
-            "storageattach",
-            name,
-            "--storagectl",
-            "SATA Controller",
-            "--port",
-            "1",
-            "--device",
-            "0",
-            "--type",
-            "dvddrive",
-            "--medium",
-            iso_path,
-        ]
+        f'VBoxManage storageattach "{name}" --storagectl="SATA Controller" '
+        f'--port 1 --device 0 --type dvddrive --medium "{iso_path}"'
     )
+
     mac = generate_pi_mac()
-    run(["VBoxManage", "modifyvm", name, "--macaddress1", mac])
+    run(f'VBoxManage modifyvm "{name}" --macaddress1 {mac}')
+
     serial = generate_serial_number()
-    run(["VBoxManage", "modifyvm", name, "--description", f"serial:{serial}"])
-    run(["VBoxManage", "startvm", name])
+    run(f'VBoxManage modifyvm "{name}" --description "serial:{serial}"')
+
+    run(f'VBoxManage startvm "{name}"')
 
 
 def clone_vm(
@@ -193,55 +129,34 @@ def clone_vm(
     start_vm=False,
 ):
     """
-    Clones an existing VM and applies all specified customizations.
+    Clones an existing VM and applies customizations. Assumes a single Bridged Adapter.
     """
-    run(["VBoxManage", "clonevm", source, "--name", target, "--register"])
+    run(f'VBoxManage clonevm "{source}" --name "{target}" --register')
 
     # Assign new unique identifiers
     new_mac = generate_pi_mac()
     serial = generate_serial_number()
-    run(["VBoxManage", "modifyvm", target, "--macaddress1", new_mac])
-    run(["VBoxManage", "modifyvm", target, "--description", f"serial:{serial}"])
+    run(f'VBoxManage modifyvm "{target}" --macaddress1 {new_mac}')
+    run(f'VBoxManage modifyvm "{target}" --description "serial:{serial}"')
 
     # Set guest properties for the first-boot configuration script
     run(
-        [
-            "VBoxManage",
-            "guestproperty",
-            "set",
-            target,
-            "/VirtualBox/GuestAdd/hostname",
-            target,
-        ]
+        f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/hostname "{target}"'
     )
     if user:
         run(
-            [
-                "VBoxManage",
-                "guestproperty",
-                "set",
-                target,
-                "/VirtualBox/GuestAdd/user",
-                user,
-            ]
+            f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/user "{user}"'
         )
     if password:
         run(
-            [
-                "VBoxManage",
-                "guestproperty",
-                "set",
-                target,
-                "/VirtualBox/GuestAdd/password",
-                password,
-            ]
+            f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/password "{password}"'
         )
 
     # Apply optional hardware customizations
     if ram:
-        run(["VBoxManage", "modifyvm", target, "--memory", str(ram)])
+        run(f'VBoxManage modifyvm "{target}" --memory {ram}')
     if cpus:
-        run(["VBoxManage", "modifyvm", target, "--cpus", str(cpus)])
+        run(f'VBoxManage modifyvm "{target}" --cpus {cpus}')
     if disk_size:
         print(f"Creating and attaching a new {disk_size}GB secondary disk...")
         vm_info_result = subprocess.run(
@@ -258,35 +173,12 @@ def clone_vm(
         vm_dir = os.path.dirname(cfg_file_line.split("=", 1)[1].strip().strip('"'))
         disk_path = os.path.join(vm_dir, f"{target}-disk2.vdi")
         disk_size_mb = disk_size * 1024
+        run(f'VBoxManage createhd --filename "{disk_path}" --size {disk_size_mb}')
         run(
-            [
-                "VBoxManage",
-                "createhd",
-                "--filename",
-                disk_path,
-                "--size",
-                str(disk_size_mb),
-            ]
-        )
-        run(
-            [
-                "VBoxManage",
-                "storageattach",
-                target,
-                "--storagectl",
-                "SATA Controller",
-                "--port",
-                "2",
-                "--device",
-                "0",
-                "--type",
-                "hdd",
-                "--medium",
-                disk_path,
-            ]
+            f'VBoxManage storageattach "{target}" --storagectl="SATA Controller" '
+            f'--port 2 --device 0 --type hdd --medium "{disk_path}"'
         )
 
     # Conditionally start the VM
     if start_vm:
-        print("Starting the new VM...")
-        run(["VBoxManage", "startvm", target])
+        run(f'VBoxManage startvm "{target}"')
