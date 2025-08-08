@@ -34,12 +34,12 @@ You will need to download **two** types of files for the latest release:
 
 ### 3. Import the Master Template Appliance
 
-You must first import the pre-built **.ova** file into VirtualBox. This creates the **pi-master-template** VM that the cloning script depends on.
+You must first import the pre-built **.ova** file into VirtualBox.
 
 1.  Open the **Oracle VM VirtualBox** application.
 2.  Go to the menu **File -> Import Appliance...**
 3.  Select the **.ova** file you downloaded.
-4.  On the settings review screen, you can leave all settings as they are and click **Import**.
+4.  On the settings review screen, you can leave all settings as they are and click **Import**. The network adapter will be automatically configured for bridged networking.
 
 ---
 

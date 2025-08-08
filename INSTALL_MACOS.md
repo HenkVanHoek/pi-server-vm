@@ -43,7 +43,7 @@ You must first import the pre-built **.ova** file into VirtualBox.
 1.  Open the **VirtualBox** application from your **/Applications** folder.
 2.  Go to the menu **File -> Import Appliance...**
 3.  Select the **.ova** file you downloaded.
-4.  On the settings review screen, you can leave all settings as they are and click **Import**.
+4.  On the settings review screen, you can leave all settings as they are and click **Import**. The network adapter will be automatically configured for bridged networking.
 
 ---
 
