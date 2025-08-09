@@ -1,24 +1,27 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-# This block defines the version information for the executable
+# Paths are now relative to the project root where webapp/ is located.
+
 block_cipher = None
 version_info = {
     'vers': '1.4.0.0',
     'CompanyName': 'PiSelfhosting',
     'ProductName': 'PiSelfhosting',
-    'InternalName': 'create-master-vm',
-    'OriginalFilename': 'create-master-vm.exe',
-    'FileDescription': 'Easy Installing services on a Raspberry Pi using Docker.',
+    'InternalName': 'pi-selfhosting-web',
+    'OriginalFilename': 'pi-selfhosting-web.exe',
+    'FileDescription': 'Web interface for PiSelfhosting services.',
     'LegalCopyright': '© 2025 Henk van Hoek. All rights reserved.'
 }
 
-
 a = Analysis(
-    ['run_create_master.py'],
+    ['webapp/app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+       datas=[
+        ('webapp/templates', 'templates'),
+        ('webapp/static', 'static')
+    ],
+    hiddenimports=['waitress'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -31,10 +34,10 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
+    [],
     a.binaries,
     a.datas,
-    [],
-    name='create-master-vm',
+    name='pi-selfhosting-web',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -47,7 +50,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # Add the version information to the EXE
     version=version_info['vers'],
     version_string=version_info
 )

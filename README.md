@@ -20,6 +20,7 @@ For users who want to skip the manual installation, a ready-to-use virtual appli
 ## Quick Start & Usage
 
 This project provides executables for easy use. For detailed, step-by-step instructions for your specific operating system, please see the guides below. These guides are the recommended starting point.
+For all 3 environments, the Anti-Virus software will very likely block the executables. Sometimes silently. Be aware of this.
 
 -   ➡️ **[Installation Guide for Windows](INSTALL_WINDOWS.md)**
 -   ➡️ **[Installation Guide for macOS](INSTALL_MACOS.md)**

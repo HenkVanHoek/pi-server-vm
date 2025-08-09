@@ -1,11 +1,30 @@
 # webapp/app.py
 import subprocess
 import sys
+import os
 from flask import Flask, render_template, request, flash
+from waitress import serve
+
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS  # type: ignore
+    except AttributeError:
+        # In a development environment, the base path is the app's root directory
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 # --- Flask App Initialization ---
-app = Flask(__name__)
-# A secret key is required for flashing messages, which securely signs the session cookie.
+template_dir = resource_path("templates")
+static_dir = resource_path("static")
+
+app = Flask(
+    __name__, template_folder=template_dir, static_folder=static_dir
+)  # A secret key is required for flashing messages, which securely signs the session cookie.
 app.config["SECRET_KEY"] = "a-random-and-secure-secret-key-for-this-project"
 
 
@@ -74,5 +93,4 @@ def index():
 
 
 if __name__ == "__main__":
-    # This block allows running the app directly for development.
-    app.run(debug=True, host="0.0.0.0")
+    serve(app, host="0.0.0.0", port=5000)
