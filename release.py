@@ -82,7 +82,7 @@ def main():
         print(e.stderr)
         sys.exit(1)
 
-    print("\n🎉 Release successful! New version has been tagged and pushed. 🎉")
+    print("\n🎉 Release successful! A new version has been tagged and pushed. 🎉")
 
 
 if __name__ == "__main__":
