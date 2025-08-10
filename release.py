@@ -7,26 +7,28 @@ def run_and_check(command, check_name):
     """Runs a command, checks for errors, and exits on failure."""
     print(f"--- CHECK: {check_name} ---")
     try:
+        # We capture output for checks to keep the console clean
         subprocess.run(command, check=True, capture_output=True, text=True)
         print("--- PASSED ---")
         return True
     except subprocess.CalledProcessError as e:
         print(f"\n--- FAILED: {check_name} ---")
         print("--- REASON ---")
-        print(e.stderr)
+        print(e.stderr)  # Print the actual error message
         print("\nAborting release. No files have been changed.")
         sys.exit(1)
 
 
 def main():
     """Performs a fully automated, failsafe release using bump-my-version."""
+
     if len(sys.argv) < 2 or sys.argv not in ("patch", "minor", "major"):
         print("Usage: python release.py [patch|minor|major]")
         sys.exit(1)
 
     part = sys.argv
 
-    print("🚀 Starting fully automated release process...")
+    print(f"🚀 Starting fully automated release process for a '{part}' update...")
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
     git_status_output = subprocess.run(
@@ -58,7 +60,7 @@ def main():
     # STEP 1: Perform the actual version bump, commit, and tag.
     print(f"\n--- ACTION: Bumping version with bump-my-version ({part}) ---")
     try:
-        # We must show the output of the real command for it to work correctly
+        # Run the real command, showing its output directly to the user
         subprocess.run(["bump-my-version", part], check=True, text=True)
         print("--- ACTION SUCCEEDED ---")
     except subprocess.CalledProcessError as e:
@@ -69,9 +71,8 @@ def main():
     # STEP 2: Push the new commit and tag to the remote.
     print("\n--- ACTION: Pushing new commit and tag to remote ---")
     try:
-        subprocess.run(
-            ["git", "push", "--follow-tags"], check=True, capture_output=True, text=True
-        )
+        # Run the final push command, showing its output
+        subprocess.run(["git", "push", "--follow-tags"], check=True, text=True)
         print("--- ACTION SUCCEEDED ---")
     except subprocess.CalledProcessError as e:
         print("\nFATAL ERROR: Failed to push after tagging.")
