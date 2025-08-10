@@ -107,3 +107,8 @@ dmypy.json
 # We intentionally track *.spec files, so they are not ignored.
 /build/
 /dist/
+
+# Local PyCharm and project artifacts
+.idea/
+scripts/isos/
+scripts/pi-master-template.vdi
