@@ -61,7 +61,7 @@ def main():
     print(f"\n--- ACTION: Bumping version with bump-my-version ({sys.argv[1]}) ---")
     try:
         # Run the real command, showing its output directly to the user
-        subprocess.run(["bump-my-version", part], check=True, text=True)
+        subprocess.run(["bump-my-version", sys.argv[1]], check=True, text=True)
         print("--- ACTION SUCCEEDED ---")
     except subprocess.CalledProcessError as e:
         print("\nFATAL ERROR: bump-my-version failed unexpectedly after checks passed.")
