@@ -27,7 +27,7 @@ def main():
         sys.exit(1)
 
     part = sys.argv[1]
-    part_command = "--" + part
+    part_command = part
     print(part_command)
 
     print(f"🚀 Starting fully automated release process for a " f"'{part}' update...")
