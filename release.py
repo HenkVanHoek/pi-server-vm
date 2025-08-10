@@ -28,10 +28,7 @@ def main():
 
     part = sys.argv[1]
 
-    print(
-        f"🚀 Starting fully automated release process for a "
-        f"'{sys.argv[1]}' update..."
-    )
+    print(f"🚀 Starting fully automated release process for a " f"'{part}' update...")
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
     git_status_output = subprocess.run(
@@ -52,8 +49,8 @@ def main():
 
     # PRE-FLIGHT CHECK 3: Can bump-my-version run without errors?
     run_and_check(
-        ["bump-my-version", part, "--dry-run"],
-        f"Can bump-my-version perform a '{part}' bump?",
+        ["bump-my-version", sys.argv[1], "--dry-run"],
+        f"Can bump-my-version perform a '{sys.argv[1]}' bump?",
     )
 
     print("\n✅ All pre-flight checks passed. Proceeding with release.")
@@ -61,7 +58,7 @@ def main():
     # --- THE POINT OF NO RETURN ---
 
     # STEP 1: Perform the actual version bump, commit, and tag.
-    print(f"\n--- ACTION: Bumping version with bump-my-version ({part}) ---")
+    print(f"\n--- ACTION: Bumping version with bump-my-version ({sys.argv[1]}) ---")
     try:
         # Run the real command, showing its output directly to the user
         subprocess.run(["bump-my-version", part], check=True, text=True)
