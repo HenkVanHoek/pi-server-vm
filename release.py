@@ -29,7 +29,8 @@ def main():
     part = sys.argv[1]
 
     print(
-        f"🚀 Starting fully automated release process for a '{sys.argv[1]}' update..."
+        f"🚀 Starting fully automated release process for a "
+        f"'{sys.argv[1]}' update..."
     )
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
