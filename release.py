@@ -29,7 +29,6 @@ def main():
     print("🚀 Starting fully automated release process...")
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
-    # Note: We check this manually because the versioning tool will create changes.
     git_status_output = subprocess.run(
         ["git", "status", "--porcelain"], capture_output=True, text=True
     ).stdout
@@ -59,9 +58,8 @@ def main():
     # STEP 1: Perform the actual version bump, commit, and tag.
     print(f"\n--- ACTION: Bumping version with bump-my-version ({part}) ---")
     try:
-        subprocess.run(
-            ["bump-my-version", part], check=True, capture_output=True, text=True
-        )
+        # We must show the output of the real command for it to work correctly
+        subprocess.run(["bump-my-version", part], check=True, text=True)
         print("--- ACTION SUCCEEDED ---")
     except subprocess.CalledProcessError as e:
         print("\nFATAL ERROR: bump-my-version failed unexpectedly after checks passed.")
