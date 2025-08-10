@@ -23,14 +23,16 @@ def main():
     """Performs a fully automated, failsafe release using bump-my-version."""
 
     # --- THIS IS THE CORRECTED LOGIC ---
-    if len(sys.argv) < 2 or sys.argv not in ("patch", "minor", "major"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("patch", "minor", "major"):
         print("Usage: python release.py [patch|minor|major]")
         sys.exit(1)
 
     part = sys.argv
     # --- END OF CORRECTION ---
 
-    print(f"🚀 Starting fully automated release process for a '{part}' update...")
+    print(
+        f"🚀 Starting fully automated release process for a '{sys.argv[1]}' update..."
+    )
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
     git_status_output = subprocess.run(
