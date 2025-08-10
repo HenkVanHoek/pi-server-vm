@@ -27,6 +27,8 @@ def main():
         sys.exit(1)
 
     part = sys.argv[1]
+    part_command = "--" + part
+    print(part_command)
 
     print(f"🚀 Starting fully automated release process for a " f"'{part}' update...")
 
@@ -49,8 +51,8 @@ def main():
 
     # PRE-FLIGHT CHECK 3: Can bump-my-version run without errors?
     run_and_check(
-        ["bump-my-version", sys.argv[1], "--dry-run"],
-        f"Can bump-my-version perform a '{sys.argv[1]}' bump?",
+        ["bump-my-version", part_command, "--dry-run"],
+        f"Can bump-my-version perform a '{part}' bump?",
     )
 
     print("\n✅ All pre-flight checks passed. Proceeding with release.")
@@ -58,10 +60,10 @@ def main():
     # --- THE POINT OF NO RETURN ---
 
     # STEP 1: Perform the actual version bump, commit, and tag.
-    print(f"\n--- ACTION: Bumping version with bump-my-version ({sys.argv[1]}) ---")
+    print(f"\n--- ACTION: Bumping version with bump-my-version ({part}) ---")
     try:
         # Run the real command, showing its output directly to the user
-        subprocess.run(["bump-my-version", sys.argv[1]], check=True, text=True)
+        subprocess.run(["bump-my-version", part_command], check=True, text=True)
         print("--- ACTION SUCCEEDED ---")
     except subprocess.CalledProcessError as e:
         print("\nFATAL ERROR: bump-my-version failed unexpectedly after checks passed.")
