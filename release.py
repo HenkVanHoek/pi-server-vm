@@ -1,4 +1,19 @@
 # release.py
+"""
+A failsafe, one-command release script for the project.
+
+This script automates the entire release process to prevent manual errors.
+It performs a series of pre-flight checks to ensure the repository is in
+a clean and ready state.
+
+If all checks pass, it then executes the "point of no return":
+  1. Bumps the version number using `bump-my-version`.
+  2. Creates a version bump commit and a corresponding Git tag.
+  3. Pushes the new commit and tag to the remote repository, which in turn
+     triggers the GitHub Actions release workflow.
+
+Usage: python release.py [patch|minor|major]
+"""
 import sys
 import subprocess
 
