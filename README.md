@@ -16,7 +16,7 @@ A set of cross-platform Python scripts to fully automate the creation and clonin
 
 For users who want to skip the manual installation, a ready-to-use virtual appliance (**ova** file) is available.
 
-➡️ **[Download the latest release (v1.4.0)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
+➡️ **[Download the latest release (v1.4.1)](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
 ## Quick Start & Usage
 
 This project provides executables for easy use. For detailed, step-by-step instructions for your specific operating system, please see the guides below. These guides are the recommended starting point.
