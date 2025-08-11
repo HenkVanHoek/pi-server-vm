@@ -1,10 +1,19 @@
+# web-app.spec
 # -*- mode: python ; coding: utf-8 -*-
+import os
 
-# Paths are now relative to the project root where webapp/ is located.
+# Get the directory where this .spec file is located.
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+# Construct the full, absolute paths to the source directories.
+WEBAPP_DIR = os.path.join(HERE, 'webapp')
+TEMPLATE_DIR = os.path.join(WEBAPP_DIR, 'templates')
+STATIC_DIR = os.path.join(WEBAPP_DIR, 'static')
+
 
 block_cipher = None
 version_info = {
-    'vers': '1.4.0.0',
+    'vers': '1.4.2.0', # This will be updated by bump-my-version
     'CompanyName': 'PiSelfhosting',
     'ProductName': 'PiSelfhosting',
     'InternalName': 'pi-selfhosting-web',
@@ -14,12 +23,12 @@ version_info = {
 }
 
 a = Analysis(
-    ['webapp/app.py'],
+    [os.path.join(WEBAPP_DIR, 'app.py')], # Use absolute path to the script
     pathex=[],
     binaries=[],
-       datas=[
-        ('webapp/templates', 'templates'),
-        ('webapp/static', 'static')
+    datas=[
+        (TEMPLATE_DIR, 'templates'), # Use absolute path to the data
+        (STATIC_DIR, 'static')     # Use absolute path to the data
     ],
     hiddenimports=['waitress'],
     hookspath=[],
@@ -42,14 +51,8 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
     version=version_info['vers'],
     version_string=version_info
 )
