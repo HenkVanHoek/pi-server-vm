@@ -1,20 +1,9 @@
-# web-app.spec
+# web-app.spec (Simplified and final version)
 # -*- mode: python ; coding: utf-8 -*-
-import os
-
-# PyInstaller provides the 'SPECPATH' variable in the execution context of the spec file.
-# This is the reliable way to get the directory of the .spec file itself.
-HERE = os.path.dirname(SPECPATH)
-
-# Construct the full, absolute paths to the source directories.
-WEBAPP_DIR = os.path.join(HERE, 'webapp')
-TEMPLATE_DIR = os.path.join(WEBAPP_DIR, 'templates')
-STATIC_DIR = os.path.join(WEBAPP_DIR, 'static')
-
 
 block_cipher = None
 version_info = {
-    'vers': '1.4.2.0', # This will be updated by bump-my-version
+    'vers': '1.4.3.0', # This will be updated by bump-my-version
     'CompanyName': 'PiSelfhosting',
     'ProductName': 'PiSelfhosting',
     'InternalName': 'pi-selfhosting-web',
@@ -24,12 +13,12 @@ version_info = {
 }
 
 a = Analysis(
-    [os.path.join(WEBAPP_DIR, 'app.py')], # Use absolute path to the script
+    ['webapp/app.py'], # Simple relative path
     pathex=[],
     binaries=[],
     datas=[
-        (TEMPLATE_DIR, 'templates'), # Use absolute path to the data
-        (STATIC_DIR, 'static')     # Use absolute path to the data
+        ('webapp/templates', 'templates'), # Simple relative path
+        ('webapp/static', 'static')     # Simple relative path
     ],
     hiddenimports=['waitress'],
     hookspath=[],
