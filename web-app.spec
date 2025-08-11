@@ -1,32 +1,51 @@
-# web-app.spec (Simplified and final version)
+# web-app.spec
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.win32.versioninfo import VSVersionInfo
 
 block_cipher = None
-version_info = {
-    'vers': '1.4.3.0', # This will be updated by bump-my-version
-    'CompanyName': 'PiSelfhosting',
-    'ProductName': 'PiSelfhosting',
-    'InternalName': 'pi-selfhosting-web',
-    'OriginalFilename': 'pi-selfhosting-web.exe',
-    'FileDescription': 'Web interface for PiSelfhosting services.',
-    'LegalCopyright': '© 2025 Henk van Hoek. All rights reserved.'
-}
+
+# Version information that will be compiled into the executable.
+vinfo = VSVersionInfo(
+    filevers=(1, 4, 3, 0),
+    prodvers=(1, 4, 3, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0),
+    kids=[
+        StringFileInfo(
+            [
+                StringTable(
+                    u'040904B0',
+                    [
+                        StringStruct(u'CompanyName', u'PiSelfhosting'),
+                        StringStruct(u'FileDescription', u'Web interface for PiSelfhosting services.'),
+                        StringStruct(u'FileVersion', u'1.4.3.0'),
+                        StringStruct(u'InternalName', u'pi-selfhosting-web'),
+                        StringStruct(u'LegalCopyright', u'© 2025 Henk van Hoek. All rights reserved.'),
+                        StringStruct(u'OriginalFilename', u'pi-selfhosting-web.exe'),
+                        StringStruct(u'ProductName', u'PiSelfhosting'),
+                    ]
+                )
+            ]
+        ),
+        VarFileInfo([VarStruct(u'Translation',)])
+    ]
+)
+
 
 a = Analysis(
-    ['webapp/app.py'], # Simple relative path
+    ['webapp/app.py'],
     pathex=[],
     binaries=[],
     datas=[
-        ('webapp/templates', 'templates'), # Simple relative path
-        ('webapp/static', 'static')     # Simple relative path
+        ('webapp/templates', 'templates'),
+        ('webapp/static', 'static')
     ],
     hiddenimports=['waitress'],
     hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    noarchive=False,
-    optimize=0,
 )
 pyz = PYZ(a.pure)
 
@@ -43,6 +62,6 @@ exe = EXE(
     upx=True,
     runtime_tmpdir=None,
     console=True,
-    version=version_info['vers'],
-    version_string=version_info
+    # Use the version info object for cross-platform compatibility.
+    version=vinfo
 )

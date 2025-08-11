@@ -1,16 +1,41 @@
+# clone-vm.spec
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.win32.versioninfo import VSVersionInfo
 
-# This block defines the version information for the executable
 block_cipher = None
-version_info = {
-    'vers': '1.4.0.0',
-    'CompanyName': 'PiSelfhosting',
-    'ProductName': 'PiSelfhosting',
-    'InternalName': 'clone-vm',
-    'OriginalFilename': 'clone-vm.exe',
-    'FileDescription': 'Clones a VirtualBox master template for automated testing.',
-    'LegalCopyright': '© 2025 Henk van Hoek. All rights reserved.'
-}
+
+# Version information that will be compiled into the executable.
+# Note: This is static and not updated by the versioning script.
+# The official version is tracked by the Git tag.
+vinfo = VSVersionInfo(
+    filevers=(1, 4, 3, 0),
+    prodvers=(1, 4, 3, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0),
+    kids=[
+        StringFileInfo(
+            [
+                StringTable(
+                    u'040904B0',
+                    [
+                        StringStruct(u'CompanyName', u'PiSelfhosting'),
+                        StringStruct(u'FileDescription', u'Clones a VirtualBox master template for automated testing.'),
+                        StringStruct(u'FileVersion', u'1.4.3.0'),
+                        StringStruct(u'InternalName', u'clone-vm'),
+                        StringStruct(u'LegalCopyright', u'© 2025 Henk van Hoek. All rights reserved.'),
+                        StringStruct(u'OriginalFilename', u'clone-vm.exe'),
+                        StringStruct(u'ProductName', u'PiSelfhosting'),
+                    ]
+                )
+            ]
+        ),
+        VarFileInfo([VarStruct(u'Translation',)])
+    ]
+)
 
 a = Analysis(
     ['run_clone.py'],
@@ -19,34 +44,22 @@ a = Analysis(
     datas=[],
     hiddenimports=[],
     hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    noarchive=False,
-    optimize=0,
 )
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
+    [],
     a.binaries,
     a.datas,
-    [],
     name='clone-vm',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    # Add the version information to the EXE
-    version=version_info['vers'],
-    version_string=version_info
+    # Use the version info object for cross-platform compatibility.
+    version=vinfo
 )
