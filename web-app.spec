@@ -2,8 +2,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 
-# Get the directory where this .spec file is located.
-HERE = os.path.abspath(os.path.dirname(__file__))
+# PyInstaller provides the 'SPECPATH' variable in the execution context of the spec file.
+# This is the reliable way to get the directory of the .spec file itself.
+HERE = os.path.dirname(SPECPATH)
 
 # Construct the full, absolute paths to the source directories.
 WEBAPP_DIR = os.path.join(HERE, 'webapp')
