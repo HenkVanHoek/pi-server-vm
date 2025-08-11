@@ -13,8 +13,8 @@ if sys.platform.startswith('win32'):
         VSVersionInfo, StringFileInfo, StringTable, StringStruct, VarFileInfo, VarStruct
     )
     vinfo = VSVersionInfo(
-        filevers=(1, 4, 3, 0),
-        prodvers=(1, 4, 3, 0),
+        file_version=(1, 4, 3, 0),
+        product_version=(1, 4, 3, 0),
         mask=0x3f,
         flags=0x0,
         OS=0x40004,
