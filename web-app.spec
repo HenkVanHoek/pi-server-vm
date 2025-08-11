@@ -9,7 +9,9 @@ vinfo = None
 
 # Only create the version info object if we are building on Windows.
 if sys.platform.startswith('win32'):
-    from PyInstaller.utils.win32.versioninfo import VSVersionInfo
+    from PyInstaller.utils.win32.versioninfo import (
+        VSVersionInfo, StringFileInfo, StringTable, StringStruct, VarFileInfo, VarStruct
+    )
     vinfo = VSVersionInfo(
         filevers=(1, 4, 3, 0),
         prodvers=(1, 4, 3, 0),
@@ -40,7 +42,6 @@ if sys.platform.startswith('win32'):
         ]
     )
 
-
 a = Analysis(
     ['webapp/app.py'],
     pathex=[],
@@ -67,6 +68,5 @@ exe = EXE(
     upx=True,
     runtime_tmpdir=None,
     console=True,
-    # The vinfo object is correctly passed, or None on non-Windows.
     version=vinfo
 )
