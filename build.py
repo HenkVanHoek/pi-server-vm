@@ -1,82 +1,51 @@
-# build.py
-"""
-A simple, cross-platform build script for the project.
-
-This script automates the process of building the standalone executables
-using PyInstaller. It performs the following steps:
-1. Cleans up old build artifacts (the 'dist' and 'build' directories).
-2. Finds all PyInstaller *.spec files in the root directory.
-3. Runs PyInstaller for each spec file found.
-4. Reports the final location of the executables.
-"""
-
-import glob
+# build.py (Final, CI-aware version)
 import os
-import shutil
 import subprocess
 import sys
 
-# Directories to clean before a new build
-BUILD_DIRS = ["build", "dist"]
-
-
-def clean():
-    """Removes previous build artifacts."""
-    print("--- Cleaning up old build artifacts ---")
-    for directory in BUILD_DIRS:
-        if os.path.isdir(directory):
-            print(f"Removing directory: {directory}")
-            shutil.rmtree(directory)
-    print("Cleanup complete.\n")
-
-
-def build():
-    """Finds all spec files and runs PyInstaller for each one."""
-    spec_files = glob.glob("*.spec")
-
-    if not spec_files:
-        print("Error: No .spec files found in the root directory.", file=sys.stderr)
-        print(
-            "Please run 'pyinstaller your_script.py' first to generate them.",
-            file=sys.stderr,
-        )
-        return False
-
-    print(f"--- Found {len(spec_files)} spec file(s) to build ---")
-    for spec in spec_files:
-        print(f"Building from: {spec}")
-        try:
-            subprocess.run(["pyinstaller", spec], check=True)
-            print(f"Successfully built: {spec}\n")
-        except subprocess.CalledProcessError as e:
-            print(f"--- ERROR building {spec} ---", file=sys.stderr)
-            print(f"PyInstaller failed with exit code: {e.returncode}", file=sys.stderr)
-            return False
-        except FileNotFoundError:
-            print("Error: 'pyinstaller' command not found.", file=sys.stderr)
-            print(
-                "Please ensure PyInstaller is installed in your active virtual environment.",
-                file=sys.stderr,
-            )
-            return False
-    return True
-
 
 def main():
-    """Main execution function."""
-    clean()
-    if build():
-        print("--- Build process completed successfully! ---")
+    """Finds all spec files and runs PyInstaller for each one."""
+    print("--- Starting build process ---")
+
+    # On GitHub Actions, the code is in a subdirectory with the repo name.
+    # We check if we are in that environment.
+    repo_name = os.environ.get("GITHUB_REPOSITORY_NAME", "")
+    project_dir = "."
+    if repo_name and os.path.isdir(repo_name):
+        project_dir = repo_name
         print(
-            f"Executables can be found in the '{os.path.join(os.getcwd(), 'dist')}' directory."
+            f"GitHub Actions environment detected. Setting project dir to: {project_dir}"
         )
-        return 0
-    else:
-        print(
-            "\n--- Build process failed. Please see the errors above. ---",
-            file=sys.stderr,
-        )
+
+    # Find all .spec files inside the correct project directory.
+    spec_files = [
+        os.path.join(project_dir, f)
+        for f in os.listdir(project_dir)
+        if f.endswith(".spec")
+    ]
+
+    if not spec_files:
+        print("Error: No .spec files found.", file=sys.stderr)
         return 1
+
+    print(f"--- Found {len(spec_files)} spec file(s) to build ---")
+    for spec_file_path in spec_files:
+        print(f"\nBuilding from: {spec_file_path}")
+        try:
+            # We must run pyinstaller with the project directory as the current working directory
+            # so that all the relative paths in the .spec files work correctly.
+            subprocess.run(["pyinstaller", spec_file_path], check=True, cwd=project_dir)
+            print(f"Successfully built: {os.path.basename(spec_file_path)}")
+        except subprocess.CalledProcessError:
+            print(
+                f"--- ERROR building {os.path.basename(spec_file_path)} ---",
+                file=sys.stderr,
+            )
+            return 1
+
+    print("\n--- Build process completed successfully! ---")
+    return 0
 
 
 if __name__ == "__main__":

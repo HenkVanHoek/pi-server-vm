@@ -43,7 +43,6 @@ jobs:
         run: uv pip install --system -e .[dev]
 
       - name: Build executables with PyInstaller
-        working-directory: ${{ github.event.repository.name }}
         run: python build.py
 
       - name: Create package directory
