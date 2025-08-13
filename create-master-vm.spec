@@ -10,7 +10,7 @@ if sys.platform == 'win32':
     binaries_list = collect_dynamic_libs('python')
 
 a = Analysis(
-    ['create-master-vm.py'],
+    ['create_master_vm.py'],
     # This 'binaries' argument is the fix.
     # It tells PyInstaller to find and bundle all the DLLs
     # that the Python interpreter itself depends on.
