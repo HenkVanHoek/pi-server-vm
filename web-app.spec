@@ -3,6 +3,7 @@
 block_cipher = None
 a = Analysis(
     ['webapp/app.py'],
+    binaries=collect_dynamic_libs('python'),
     datas=[('webapp/templates', 'templates'), ('webapp/static', 'static')],
     hiddenimports=['waitress'],
 )

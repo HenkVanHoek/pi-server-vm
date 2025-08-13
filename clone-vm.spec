@@ -1,7 +1,15 @@
 # clone-vm.spec
 # -*- mode: python ; coding: utf-8 -*-
 block_cipher = None
-a = Analysis(['run_clone.py'])
+
+a = Analysis(
+    ['run_clone.py'],
+    # This 'binaries' argument is the fix.
+    # It tells PyInstaller to find and bundle all the DLLs
+    # that the Python interpreter itself depends on.
+    binaries=collect_dynamic_libs('python')
+)
+
 pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
