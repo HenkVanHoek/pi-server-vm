@@ -18,6 +18,71 @@ import sys
 import subprocess
 
 
+def check_git_sync_status():
+    """
+    Performs a pre-flight check to ensure the local repository is in sync with the remote.
+    """
+    print("🔎 Checking Git repository sync status...")
+    try:
+        # Step 1: Fetch the latest info from the remote without merging
+        subprocess.run(["git", "fetch"], check=True, capture_output=True, text=True)
+
+        # Step 2: Check the status. '-uno' simplifies output to the bare minimum.
+        status_result = subprocess.run(
+            ["git", "status", "-uno"], check=True, capture_output=True, text=True
+        )
+        output = status_result.stdout
+
+        # Step 3: Analyze the output
+        if "Your branch is up to date" in output:
+            print("✅ Git repository is in sync with the remote.")
+            return True
+        elif "Your branch is behind" in output:
+            print(
+                "\n❌ GIT SYNC ERROR: Your local branch is behind the remote.",
+                file=sys.stderr,
+            )
+            print(
+                "   Please run 'git pull' to update your local code before creating a new release.",
+                file=sys.stderr,
+            )
+            sys.exit(1)  # Exit the script
+        elif "Your branch is ahead" in output:
+            print(
+                "\n❌ GIT SYNC ERROR: Your local branch has commits that have not been pushed.",
+                file=sys.stderr,
+            )
+            print(
+                "   Please run 'git push' to publish your changes before creating a new release.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        elif "have diverged" in output:
+            print(
+                "\n❌ GIT SYNC ERROR: Your local branch has diverged from the remote.",
+                file=sys.stderr,
+            )
+            print(
+                "   Please rebase or merge with the remote branch before creating a new release.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        else:
+            # Fallback for any other unexpected status
+            print(
+                "\n⚠️  Could not determine Git sync status. Please check manually.",
+                file=sys.stderr,
+            )
+            return True  # Allow to continue but with a warning
+
+    except subprocess.CalledProcessError as e:
+        print(
+            f"\n❌ An error occurred while checking Git status: {e.stderr}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
 def run_and_check(command, check_name):
     """Runs a command, checks for errors, and exits on failure."""
     print(f"--- CHECK: {check_name} ---")
@@ -46,6 +111,8 @@ def main():
     print(part_command)
 
     print(f"🚀 Starting fully automated release process for a " f"'{part}' update...")
+
+    check_git_sync_status()
 
     # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
     git_status_output = subprocess.run(

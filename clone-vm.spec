@@ -10,7 +10,7 @@ if sys.platform == 'win32':
     binaries_list = collect_dynamic_libs('python')
 
 a = Analysis(
-    ['clone_vm.py'],
+    ['run_clone.py'],
     binaries=binaries_list
 )
 
