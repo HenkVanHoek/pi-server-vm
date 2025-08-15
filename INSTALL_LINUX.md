@@ -1,5 +1,8 @@
 # Installation and Usage on Linux (Ubuntu Desktop)
 
+**Minimum Requirement:** macOS 10.15 (Catalina)
+
+The provided executable is built to be compatible with macOS 10.15 and all newer versions.
 This guide provides the complete instructions for setting up and using the **pi-server-vm** project on a Linux system, such as Ubuntu Desktop.
 
 ---

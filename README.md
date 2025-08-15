@@ -12,6 +12,16 @@ A set of cross-platform Python scripts to fully automate the creation and clonin
 - **User-Friendly Console:** The IP address of the VM is displayed on the console login screen for easy, immediate SSH access.
 - **Secure by Default:** The template is configured with a locked root account and a standard user with **sudo** privileges whose password must be changed on first login (if not set during cloning).
 
+## Compatibility
+
+This project provides pre-built executables for Windows, macOS, and Linux. They are built and tested to run on the following operating systems **or newer**:
+
+*   **Windows:** Windows 10
+*   **macOS:** macOS 10.15 (Catalina)
+*   **Linux:** Ubuntu 22.04 (glibc 2.35)
+
+While the tools may work on other Linux distributions, they are officially tested against Ubuntu 22.04.
+
 ## Downloads
 
 For users who want to skip the manual installation, a ready-to-use virtual appliance (**ova** file) is available.
