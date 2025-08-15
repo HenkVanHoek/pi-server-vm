@@ -137,11 +137,14 @@ def export_and_upload_vm(tag_name):
     """
     # --- Configuration ---
     # IMPORTANT: Change this to the exact name of your master VM in VirtualBox
-    MASTER_VM_NAME = "pi-master-vm"
-    OVA_FILENAME = f"pi-server-vm-{tag_name}.ova"
+    MASTER_VM_NAME = "pi-master-template"
+    OVA_FILENAME = f"pi-server-template-{tag_name}.ova"
 
     # --- ACTION 1: Export the VM using VBoxManage ---
-    print(f"\n--- ACTION: Exporting master VM '{MASTER_VM_NAME}' ---")
+    print(
+        f"\n--- ACTION: Exporting master template Virtual Machine '{MASTER_VM_NAME}' "
+        f"---"
+    )
     print(f"         -> This may take several minutes...")
     try:
         subprocess.run(
