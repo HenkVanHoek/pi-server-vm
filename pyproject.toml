@@ -49,15 +49,15 @@ replace = "Download the latest release (v{new_version})"
 
 [[tool.bump-my-version.files]]
 path = "file_version_info.txt"
-search = "StringStruct(u'FileVersion', u'{current_version}')"
-replace = "StringStruct(u'FileVersion', u'{new_version}')"
+search = "StringStruct(u'FileVersion', u'{current_version}.0')"
+replace = "StringStruct(u'FileVersion', u'{new_version}.0')"
 
 [[tool.bump-my-version.files]]
 path = "file_version_info.txt"
-search = "filevers=({current_version_tuple})"
-replace = "filevers=({new_version_tuple})"
+search = "filevers=({current_version_tuple_padded})"
+replace = "filevers=({new_version_tuple_padded})"
 
 [[tool.bump-my-version.files]]
 path = "file_version_info.txt"
-search = "prodvers=({current_version_tuple})"
-replace = "prodvers=({new_version_tuple})"
+search = "prodvers=({current_version_tuple_padded})"
+replace = "prodvers=({new_version_tuple_padded})"

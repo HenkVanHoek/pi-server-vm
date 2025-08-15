@@ -17,7 +17,7 @@ VSVersionInfo(
         u'040904B0',
         [StringStruct(u'CompanyName', u'PiSelfhosting'),
         StringStruct(u'FileDescription', u'Pi-Server-VM Tools'),
-        StringStruct(u'FileVersion', u'1.4.12'),
+        StringStruct(u'FileVersion', u'1.4.12.0'),
         StringStruct(u'InternalName', u'Pi-Server-VM'),
         StringStruct(u'LegalCopyright', u'© 2025 Henk van Hoek. All rights reserved.'),
         StringStruct(u'OriginalFilename', u'pi-server-vm.exe'),
