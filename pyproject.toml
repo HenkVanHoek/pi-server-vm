@@ -54,10 +54,10 @@ replace = "StringStruct(u'FileVersion', u'{new_version}.0')"
 
 [[tool.bump-my-version.files]]
 path = "file_version_info.txt"
-search = "filevers=({current_version_tuple_padded})"
-replace = "filevers=({new_version_tuple_padded})"
+search = "filevers={current_version_tuple_padded}"
+replace = "filevers={new_version_tuple_padded}"
 
 [[tool.bump-my-version.files]]
 path = "file_version_info.txt"
-search = "prodvers=({current_version_tuple_padded})"
-replace = "prodvers=({new_version_tuple_padded})"
+search = "prodvers={current_version_tuple_padded}"
+replace = "prodvers={new_version_tuple_padded}"
