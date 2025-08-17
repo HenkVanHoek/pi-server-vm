@@ -39,14 +39,17 @@ jobs:
       - name: Install uv
         run: pipx install uv
 
+      # --- NEW STEP TO ENSURE A CLEAN ENVIRONMENT v1.5.0 rerun---
+      - name: Clear uv cache
+        run: uv cache clean
+        shell: bash # Explicitly use bash for consistency
+
       - name: Install dependencies with uv
         run: uv pip install --system -e .[dev]
 
-      # --- THIS IS THE CRUCIAL DEBUGGING STEP ---
-      # It will print a recursive list of all files in the checked-out
-      # repository, allowing us to see the exact file structure.
       - name: List all files for debugging
         run: ls -R
+        shell: bash # Explicitly use bash for consistency on Windows
 
       - name: Build executables with PyInstaller
         run: python build.py
