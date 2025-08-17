@@ -1,4 +1,4 @@
-# release.py
+# release.py (Final, Robust Version)
 """
 A failsafe, multi-command release script for the project.
 
@@ -18,32 +18,28 @@ It has two main modes of operation:
 2. Upload Release Assets:
    Finds the latest Git tag, exports the master VirtualBox VM to a .ova file,
    and uploads this file as an asset to the corresponding GitHub Release. This
-   is a long-running process and is done separately from the main release.
+   command is robust and can handle race conditions with the CI/CD pipeline.
 
    Usage: python release.py upload
 """
 import os
 import sys
 import subprocess
+import time
 
 
 def check_git_sync_status():
     """
-    Performs a pre-flight check to ensure the local repository is in
-     sync with the remote.
+    Performs a pre-flight check to ensure the local repository is in sync with
+    the remote.
     """
     print("🔎 Checking Git repository sync status...")
     try:
-        # Step 1: Fetch the latest info from the remote without merging
         subprocess.run(["git", "fetch"], check=True, capture_output=True, text=True)
-
-        # Step 2: Check the status.
         status_result = subprocess.run(
             ["git", "status", "-uno"], check=True, capture_output=True, text=True
         )
         output = status_result.stdout
-
-        # Step 3: Analyze the output
         if "Your branch is up to date" in output:
             print("✅ Git repository is in sync with the remote.")
             return True
@@ -53,45 +49,33 @@ def check_git_sync_status():
                 file=sys.stderr,
             )
             print(
-                "   Please run 'git pull' to update your local code "
-                "before creating a new release.",
-                file=sys.stderr,
+                "   Please run 'git pull' to update your local code.", file=sys.stderr
             )
             sys.exit(1)
         elif "Your branch is ahead" in output:
             print(
-                "\n❌ GIT SYNC ERROR: Your local branch has commits "
-                "that have not been pushed.",
+                "\n❌ GIT SYNC ERROR: Your local branch has unpushed commits.",
                 file=sys.stderr,
             )
-            print(
-                "   Please run 'git push' to publish your changes "
-                "before creating a new release.",
-                file=sys.stderr,
-            )
+            print("   Please run 'git push' to publish your changes.", file=sys.stderr)
             sys.exit(1)
         elif "have diverged" in output:
             print(
-                "\n❌ GIT SYNC ERROR: Your local branch has "
-                "diverged from the remote.",
+                "\n❌ GIT SYNC ERROR: Your local branch has diverged from "
+                "the remote.",
                 file=sys.stderr,
             )
-            print(
-                "   Please rebase or merge with the remote "
-                "branch before creating a new release.",
-                file=sys.stderr,
-            )
+            print("   Please rebase or merge with the remote branch.", file=sys.stderr)
             sys.exit(1)
         else:
             print(
-                "\n⚠️  Could not determine Git sync status. " "Please check manually.",
+                "\n⚠️  Could not determine Git sync status. Please check manually.",
                 file=sys.stderr,
             )
             return True
-
     except subprocess.CalledProcessError as e:
         print(
-            f"\n❌ An error occurred while checking " f"Git status: {e.stderr}",
+            f"\n❌ An error occurred while checking Git status: {e.stderr}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -116,7 +100,6 @@ def get_latest_tag():
     """Finds the latest Git tag in the repository."""
     print("🔎 Finding latest Git tag...")
     try:
-        # 'git describe --tags --abbrev=0' gets the most recent tag name
         result = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
             check=True,
@@ -134,18 +117,31 @@ def get_latest_tag():
 
 def export_and_upload_vm(tag_name):
     """
-    Exports the master VirtualBox VM to an .ova file and uploads it to the release.
+    Configures, exports, and uploads the master VM. Handles pre-existing files
+    and waits for the GitHub release to be created.
     """
     # --- Configuration ---
-    # IMPORTANT: Change this to the exact name of your master VM in VirtualBox
     MASTER_VM_NAME = "pi-master-template"
+
+    # Ensure the standard output directory exists.
     os.makedirs("dist", exist_ok=True)
     OVA_FILENAME = os.path.join("dist", f"pi-server-template-{tag_name}.ova")
 
+    # --- Pre-flight Check: Clean up old artifact before starting ---
+    if os.path.exists(OVA_FILENAME):
+        print(f"   -> Found pre-existing artifact. Deleting: {OVA_FILENAME}")
+        try:
+            os.remove(OVA_FILENAME)
+        except OSError as e:
+            print(
+                f"❌ FATAL ERROR: Could not delete old .ova file: {e}", file=sys.stderr
+            )
+            sys.exit(1)
+
     # --- ACTION 1: Export the VM using VBoxManage ---
     print(
-        f"\n--- ACTION: Exporting master template Virtual Machine '{MASTER_VM_NAME}' "
-        f"---"
+        f"\n--- ACTION: Exporting master template "
+        f"Virtual Machine '{MASTER_VM_NAME}' ---"
     )
     print(f"         -> This may take several minutes...")
     try:
@@ -159,7 +155,7 @@ def export_and_upload_vm(tag_name):
     except FileNotFoundError:
         print("❌ FATAL ERROR: 'VBoxManage' command not found.", file=sys.stderr)
         print(
-            "   Is VirtualBox installed and is its " "directory in your system's PATH?",
+            "   Is VirtualBox installed and its directory in your system's PATH?",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -168,26 +164,55 @@ def export_and_upload_vm(tag_name):
         print(e.stderr, file=sys.stderr)
         sys.exit(1)
 
-    # --- ACTION 2: Upload the .ova file using GitHub CLI ---
+    # --- ACTION 2: Upload the .ova file with a retry mechanism ---
     print(f"\n--- ACTION: Uploading '{OVA_FILENAME}' to release {tag_name} ---")
-    try:
-        subprocess.run(
-            ["gh", "release", "upload", tag_name, OVA_FILENAME], check=True, text=True
-        )
-        print(f"✅ '{OVA_FILENAME}' uploaded successfully.")
-    except FileNotFoundError:
-        print("❌ FATAL ERROR: 'gh' command not found.", file=sys.stderr)
-        print(
-            "   Have you installed the GitHub CLI and "
-            "authenticated with 'gh auth login'?",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    except subprocess.CalledProcessError:
-        print(
-            f"❌ FATAL ERROR: Failed to upload the " f"release asset.", file=sys.stderr
-        )
-        sys.exit(1)
+
+    max_retries = 10  # Try for 5 minutes (10 * 30 seconds)
+    for attempt in range(max_retries):
+        try:
+            # We must capture output to check for the specific error
+            result = subprocess.run(
+                ["gh", "release", "upload", tag_name, OVA_FILENAME, "--clobber"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"✅ '{OVA_FILENAME}' uploaded successfully.")
+            # Add the stdout from the gh command for user confirmation
+            print(result.stdout)
+            return  # Success, exit the function
+        except FileNotFoundError:
+            print("❌ FATAL ERROR: 'gh' command not found.", file=sys.stderr)
+            print(
+                "   Have you installed the GitHub CLI and "
+                "authenticated with 'gh auth login'?",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        except subprocess.CalledProcessError as e:
+            # Check if the error is the specific "release not found" error
+            if "release not found" in e.stderr:
+                if attempt < max_retries - 1:
+                    print(
+                        f"   -> Release page not found yet. "
+                        f"Waiting 30 seconds... ({attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(30)
+                else:
+                    print(
+                        "❌ FATAL ERROR: Release was not found after 5 minutes.",
+                        file=sys.stderr,
+                    )
+                    print(e.stderr, file=sys.stderr)
+                    sys.exit(1)
+            else:
+                # It was a different, unexpected error
+                print(
+                    f"❌ FATAL ERROR: Failed to upload the release asset.",
+                    file=sys.stderr,
+                )
+                print(e.stderr, file=sys.stderr)
+                sys.exit(1)
 
 
 def main():
@@ -206,7 +231,6 @@ def main():
 
         check_git_sync_status()
 
-        # PRE-FLIGHT CHECK 1: Is the Git working directory clean?
         git_status_output = subprocess.run(
             ["git", "status", "--porcelain"], capture_output=True, text=True
         ).stdout
@@ -220,10 +244,7 @@ def main():
         print("--- CHECK: Is Git working directory clean? ---")
         print("--- PASSED ---")
 
-        # PRE-FLIGHT CHECK 2: Can we connect to the remote and push?
         run_and_check(["git", "push", "--dry-run"], "Can connect and push to remote?")
-
-        # PRE-FLIGHT CHECK 3: Can bump-my-version run without errors?
         run_and_check(
             ["bump-my-version", "bump", part, "--tag", "--dry-run"],
             f"Can bump-my-version perform a '{part}' bump?",
@@ -231,7 +252,6 @@ def main():
 
         print("\n✅ All pre-flight checks passed. Proceeding with release.")
 
-        # --- THE POINT OF NO RETURN ---
         print(f"\n--- ACTION: Bumping version with bump-my-version ({part}) ---")
         try:
             subprocess.run(
