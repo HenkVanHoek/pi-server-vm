@@ -22,6 +22,7 @@ It has two main modes of operation:
 
    Usage: python release.py upload
 """
+import os
 import sys
 import subprocess
 
@@ -138,7 +139,8 @@ def export_and_upload_vm(tag_name):
     # --- Configuration ---
     # IMPORTANT: Change this to the exact name of your master VM in VirtualBox
     MASTER_VM_NAME = "pi-master-template"
-    OVA_FILENAME = f"pi-server-template-{tag_name}.ova"
+    os.makedirs("dist", exist_ok=True)
+    OVA_FILENAME = os.path.join("dist", f"pi-server-template-{tag_name}.ova")
 
     # --- ACTION 1: Export the VM using VBoxManage ---
     print(
