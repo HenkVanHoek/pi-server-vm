@@ -1,4 +1,4 @@
-# .github/workflows/build_release.yml (Final, Definitive Version)
+# .github/workflows/build_release.yml (The Final, Definitive Version)
 
 name: Create GitHub Release with Cross-Platform Executables
 
@@ -36,36 +36,20 @@ jobs:
         with:
           python-version: "3.11"
 
+      # --- THE DEFINITIVE FIX: Install the correct MSVC++ Runtimes ---
+      # This step runs ONLY on Windows. It installs the required C++ toolchain
+      # and runtimes, making the necessary DLLs available on the system PATH.
+      - name: Install MSVC v143 - VS 2022 C++ x64/x86 build tools
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msvc-dev@v1
+
       - name: Install uv
         run: pipx install uv
 
       - name: Install dependencies with uv
         run: uv pip install --system -e .[dev]
 
-      # --- FORENSIC STEP: Find the true location of python311.dll on Windows ---
-      # This step runs ONLY on the Windows builder. It finds the exact path to the
-      # DLL and saves it as an output variable for the build step.
-      - name: Find the location of python311.dll on Windows
-        if: runner.os == 'Windows'
-        id: find_dll
-        run: |
-          echo "Searching for python311.dll in ${{ env.pythonLocation }}..."
-          $dll_path = (Get-ChildItem -Path ${{ env.pythonLocation }} -Recurse -Filter python311.dll).FullName
-          if ($dll_path) {
-            echo "Found DLL at: $dll_path"
-            echo "dll_path=$dll_path" >> $env:GITHUB_OUTPUT
-          } else {
-            echo "FATAL: python311.dll not found!"
-            exit 1
-          }
-        shell: pwsh
-
-      # --- Build Step with Environment Variable ---
       - name: Build executables with PyInstaller
-        # The 'env' block makes the DLL path from the previous step available
-        # as an environment variable that our intelligent .spec file can read.
-        env:
-          WIN_PYTHON_DLL_PATH: ${{ steps.find_dll.outputs.dll_path }}
         run: python build.py
 
       - name: Create package directory

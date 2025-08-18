@@ -1,28 +1,27 @@
-# web-app.spec
+# web-app.spec (Final, Definitive Version)
 # -*- mode: python ; coding: utf-8 -*-
+
+from PyInstaller.utils.hooks import collect_dynamic_libs
+
 block_cipher = None
-
-import sys
-binaries_list = []
-
-if sys.platform == 'win32':
-    from PyInstaller.utils.hooks import collect_dynamic_libs
-    binaries_list = collect_dynamic_libs('python')
 
 a = Analysis(
     ['webapp/app.py'],
-    binaries=binaries_list,
+    binaries=collect_dynamic_libs('python'),
+    # Ensure these paths are correct for your project structure
     datas=[('webapp/templates', 'templates'), ('webapp/static', 'static')],
-    hiddenimports=['waitress'],
+    hiddenimports=['waitress']
 )
+
 pyz = PYZ(a.pure)
+
 exe = EXE(
     pyz,
     a.scripts,
     [],
     name='pi-selfhosting-web',
-    console=True,
+    # This should be False for a web/GUI application to hide the console
+    console=False,
     upx=True,
-    # Point directly to the version info file.
     version='file_version_info.txt'
 )
