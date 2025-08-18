@@ -1,4 +1,4 @@
-# .github/workflows/build_release.yml
+# .github/workflows/build_release.yml (Forensic Version)
 
 name: Create GitHub Release with Cross-Platform Executables
 
@@ -39,17 +39,20 @@ jobs:
       - name: Install uv
         run: pipx install uv
 
-      # --- NEW STEP TO ENSURE A CLEAN ENVIRONMENT v1.5.0 rerun---
-      - name: Clear uv cache
-        run: uv cache clean
-        shell: bash # Explicitly use bash for consistency
-
       - name: Install dependencies with uv
         run: uv pip install --system -e .[dev]
 
-      - name: List all files for debugging
-        run: ls -R
-        shell: bash # Explicitly use bash for consistency on Windows
+      # --- THE ULTIMATE FORENSIC STEP ---
+      # This step will run ONLY on the Windows builder. It asks PyInstaller's
+      # forensic tool to inspect the Python DLL and report its exact dependencies.
+      - name: Run PyInstaller Version Grabber on Windows
+        if: runner.os == 'Windows'
+        run: |
+          echo "--- Running pyi-grab_version for python311.dll ---"
+          # The path to the Python DLL is found via the $pythonLocation environment variable
+          pyi-grab_version ${{ env.pythonLocation }}\python311.dll
+          echo "--- Done ---"
+        shell: bash
 
       - name: Build executables with PyInstaller
         run: python build.py
