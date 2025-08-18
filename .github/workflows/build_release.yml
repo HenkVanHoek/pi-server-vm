@@ -1,4 +1,4 @@
-# .github/workflows/build_release.yml (The Final, Definitive Version)
+# .github/workflows/build_release.yml (The Final, Definitive Version 2.0)
 
 name: Create GitHub Release with Cross-Platform Executables
 
@@ -31,17 +31,17 @@ jobs:
       - name: Check out the repository code
         uses: actions/checkout@v4
 
+      # --- THE DEFINITIVE FIX v2: Use a trusted community action ---
+      # This step runs ONLY on Windows. It sets up the MSVC developer environment,
+      # which correctly adds the C++ runtime DLLs to the system PATH.
+      - name: Set up MSVC Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      # --- THE DEFINITIVE FIX: Install the correct MSVC++ Runtimes ---
-      # This step runs ONLY on Windows. It installs the required C++ toolchain
-      # and runtimes, making the necessary DLLs available on the system PATH.
-      - name: Install MSVC v143 - VS 2022 C++ x64/x86 build tools
-        if: runner.os == 'Windows'
-        uses: microsoft/setup-msvc-dev@v1
 
       - name: Install uv
         run: pipx install uv
