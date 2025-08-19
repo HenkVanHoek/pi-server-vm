@@ -19,7 +19,7 @@ else:
     binaries = collect_dynamic_libs('python')
 
 a = Analysis(
-    ['run_clone_vm.py'],
+    ['run_clone.py'],
     binaries=binaries,
     datas=[],
     hiddenimports=[]
