@@ -12,12 +12,14 @@ if sys.platform == "win32":
     python_dll = os.path.join(python_dir, dll_name)
     binaries = collect_dynamic_libs('python')
     if os.path.exists(python_dll):
-        binaries += [(python_dll, '_internal')]
+        binaries.append((python_dll, '_internal'))
+    else:
+        print(f"WARNING: python_dll not found at {python_dll}")
 else:
     binaries = collect_dynamic_libs('python')
 
 a = Analysis(
-    ['run_create_master.py'],
+    ['run_clone_vm.py'],
     binaries=binaries,
     datas=[],
     hiddenimports=[]
