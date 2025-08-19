@@ -36,5 +36,6 @@ exe = EXE(
     # This should be False for a web/GUI application to hide the console
     console=False,
     upx=True,
-    version='file_version_info.txt'
+    version='file_version_info.txt',
+    onefile=True
 )

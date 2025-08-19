@@ -33,5 +33,6 @@ exe = EXE(
     name='create-master-vm',
     console=True,
     upx=True,
-    version='file_version_info.txt'
+    version='file_version_info.txt',
+    onefile=True
 )
