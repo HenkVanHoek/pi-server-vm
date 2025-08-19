@@ -5,9 +5,19 @@ from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
 
+if sys.platform == "win32":
+    dll_name = f"python{sys.version_info.major}{sys.version_info.minor}.dll"
+    python_dir = os.path.dirname(sys.executable)
+    python_dll = os.path.join(python_dir, dll_name)
+    binaries = collect_dynamic_libs('python')
+    if os.path.exists(python_dll):
+        binaries += [(python_dll, '.')]
+else:
+    binaries = collect_dynamic_libs('python')
+
 a = Analysis(
-    ['run_clone.py'],
-    binaries=collect_dynamic_libs('python'),
+    ['run_create_master.py'],
+    binaries=binaries,
     datas=[],
     hiddenimports=[]
 )
