@@ -1,14 +1,13 @@
-# clone-vm.spec (Final, Definitive Version)
+# clone-vm.spec (Directory Build Test)
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_dynamic_libs
-import sys
 
 block_cipher = None
 
 a = Analysis(
     ['run_clone.py'],
-    binaries=[],
+    binaries=collect_dynamic_libs('python'),
     datas=[],
     hiddenimports=[]
 )
@@ -19,9 +18,21 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
+    exclude_binaries=True, # Exclude from EXE, will be in COLLECT
     name='clone-vm',
     console=True,
     upx=True,
-    version='file_version_info.txt',
-    onefile=True,
+    version='file_version_info.txt'
+)
+
+# The COLLECT object creates the final output directory
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='clone-vm'
 )
