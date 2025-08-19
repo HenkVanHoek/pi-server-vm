@@ -2,6 +2,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_dynamic_libs
+import sys
 
 block_cipher = None
 

@@ -1,6 +1,6 @@
 # create-master-vm.spec (Final, Definitive Version)
 # -*- mode: python ; coding: utf-8 -*-
-
+import sys
 from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
