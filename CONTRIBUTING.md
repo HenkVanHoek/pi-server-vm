@@ -38,6 +38,24 @@ To get started with developing the scripts locally, follow these steps:
 
         pip install requests pytest bump2version
 
+## Setting Up the Release Mastering Environment
+
+While day-to-day development of the Python scripts can be done on any operating system (Windows, macOS, or Linux), creating an official, complete release requires a **Windows environment**. This is because the final steps of the process involve packaging the Windows installer and exporting the master VirtualBox appliance.
+
+This environment can be a physical Windows PC or, for developers on other platforms, a dedicated Windows Virtual Machine.
+
+To set up your mastering environment, you will need to install the following software **inside your Windows environment**:
+
+1.  **Git for Windows**
+2.  **Python 3.11**
+3.  **`uv`** (e.g., via `pipx install uv`)
+4.  **Project Dependencies** (run `uv pip install -e .[dev]` in the project root)
+5.  **Oracle VirtualBox for Windows**
+6.  **Inno Setup 6** (from [jrsoftware.org](https://jrsoftware.org/isinfo.php))
+7.  **GitHub CLI** (`gh`)
+
+Before you can run the `finalize` command, you must first use the `create-master-vm` tool within this environment to generate the `pi-master-template` that VirtualBox will use for the export.
+
 ## Submitting Changes (Pull Requests)
 
 1.  Create a new branch for your feature or bugfix. For example:

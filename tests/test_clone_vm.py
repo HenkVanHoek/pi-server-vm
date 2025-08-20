@@ -9,7 +9,8 @@ def test_parsing_with_all_arguments(monkeypatch):
     """
     Tests if the script correctly parses a command with all arguments.
     """
-    # Simulate the user typing: python clone_vm.py my-test-pi --ram 2048 --cpus 2 --disk-size 32
+    # Simulate the user typing: python clone_vm.py my-test-pi --ram 2048
+    # --cpus 2 --disk-size 32
     monkeypatch.setattr(
         "sys.argv",
         [
