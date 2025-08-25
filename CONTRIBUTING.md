@@ -70,4 +70,15 @@ Before you can run the `finalize` command, you must first use the `create-master
 4.  Open a **Pull Request** from your branch to the **main** branch of the original repository.
 5.  Please provide a clear description of the changes you have made in the Pull Request.
 
+## macOS Development
+
+When you build the executables on your Mac using the build.py script, the resulting applications in the dist folder will not be code-signed. The macOS Gatekeeper security feature will prevent them from running correctly.
+
+To test your local builds, you must clear the quarantine attribute after each build. Run the following commands from the root of the project directory in your terminal.
+
+    xattr -cr dist/clone-vm
+    xattr -cr dist/create-master-vm
+    xattr -cr dist/pi-selfhosting-web
+
+This will allow you to run and test your locally-built executables. The official releases will be signed in the future, but this is the required step for all local development and testing.
 Thank you again for your contribution!

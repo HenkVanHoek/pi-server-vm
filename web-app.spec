@@ -1,4 +1,4 @@
-# web-app.spec (Directory Build Test)
+# web-app.spec (Final, Corrected Version)
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_dynamic_libs
@@ -8,9 +8,8 @@ block_cipher = None
 a = Analysis(
     ['webapp/app.py'],
     binaries=collect_dynamic_libs('python'),
-    # This ensures your web templates and static files are included.
-    # Please verify these paths match your project structure.
     datas=[('webapp/templates', 'templates'), ('webapp/static', 'static')],
+    # This is the crucial line that fixes the ModuleNotFoundError
     hiddenimports=['waitress']
 )
 
@@ -20,7 +19,6 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
-    # This is a best practice for directory builds to avoid duplicating DLLs.
     exclude_binaries=True,
     name='pi-selfhosting-web',
     console=False,
@@ -28,8 +26,6 @@ exe = EXE(
     version='file_version_info.txt'
 )
 
-# The COLLECT object is what tells PyInstaller to create a final output directory
-# instead of a single file.
 coll = COLLECT(
     exe,
     a.binaries,

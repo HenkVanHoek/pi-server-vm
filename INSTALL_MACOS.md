@@ -1,63 +1,74 @@
-# Installation and Usage on macOS
+# Installing on macOS
 
-This guide provides the complete instructions for setting up and using the **pi-server-vm** project on a macOS system.
+This guide will walk you through the installation and setup of the Pi-Server-VM tools on a macOS system.
 
----
+## Prerequisites
 
-## Phase 1: Host System Preparation
+Before you begin, please ensure you have the latest version of Oracle VirtualBox installed on your Mac. The Pi-Server-VM tools are designed to manage VirtualBox, so it must be present on your machine.
 
-### 1. Install VirtualBox
+## Step 1: Download the Latest Release
 
-The project requires the **Oracle VM VirtualBox** application and its command-line tools.
+Navigate to the project official releases page to find the latest version.
 
-- **[Download VirtualBox](https://www.virtualbox.org/wiki/Downloads)**
+➡️ **[Download the latest release](https://github.com/HenkVanHoek/pi-server-vm/releases/latest)**
 
-Download and run the installer for macOS. During installation, you may be prompted to allow kernel extensions in your **System Settings -> Privacy & Security**. Please approve this for VirtualBox to function correctly.
+On the release page, find the "Assets" section and download the file named executables-macOS.tar.gz.
 
----
+## Step 2: Extract the Archive
 
-## Phase 2: Project Setup
+1.  Open the Terminal application.
+2.  Navigate to the directory where you saved the downloaded file. For most users, this will be the Downloads directory.
 
-### 1. Download the Release Files
+        cd ~/Downloads
 
-Go to the [GitHub Releases page](https://github.com/HenkVanHoek/pi-server-vm/releases/latest) for this project.
+3.  Use the tar command to extract the contents of the archive.
 
-You will need to download **two** types of files for the latest release:
--   The virtual machine template, which is a file ending in **.ova**.
--   The command-line tools for macOS, which is a file ending in **.tar.gz**.
+        tar -xzvf executables-macOS.tar.gz
 
-### 2. Extract the Executables
+This will create a new directory named dist. Inside the dist directory, you will find a separate folder for each of the tools, for example, clone-vm and create-master-vm.
 
-1.  Open the **Terminal** app.
-2.  Navigate to your **Downloads** folder.
-3.  Run the **tar** command to extract the archive. The files will already be executable.
+## Step 3: Authorize the Applications
 
-        tar -xvzf executables-macOS.tar.gz
+Because this software is not downloaded from the Mac App Store, a macOS security feature called Gatekeeper will prevent it from running at first. You must perform a one-time action to tell macOS that you trust these tools.
 
-    This will create a new folder containing the **create-master-vm** and **clone-vm** tools.
+1.  Make sure you are still in the same directory in your terminal (for example, the Downloads folder).
+2.  Run the following commands for each of the tool folders you extracted. This command removes the quarantine attribute that macOS adds to downloaded files.
 
-### 3. Import the Master Template Appliance
+    For the clone-vm tool:
 
-You must first import the pre-built **.ova** file into VirtualBox.
+        xattr -cr dist/clone-vm
 
-1.  Open the **VirtualBox** application from your **/Applications** folder.
-2.  Go to the menu **File -> Import Appliance...**
-3.  Select the **.ova** file you downloaded.
-4.  On the settings review screen, you can leave all settings as they are and click **Import**. The network adapter will be automatically configured for bridged networking.
+    For the create-master-vm tool:
 
----
+        xattr -cr dist/create-master-vm
 
-## Phase 3: Creating Your First Virtual Pi
+    For the web-app tool:
 
-You are now ready to create your first clone.
+        xattr -cr dist/pi-selfhosting-web
 
-1.  In your Terminal, navigate into the folder where you extracted the executables.
-2.  Run the **clone-vm** tool, providing a name for your new VM and any optional parameters.
+After running these commands, you will be able to run the executables from inside each folder without any security warnings.
 
-        # Example: Create a new VM named 'pi-test-macos'
-        ./clone-vm pi-test-macos
+## Step 4: Add Tools to Your System PATH (Recommended)
 
-        # Example: Create a more powerful VM and start it immediately
-        ./clone-vm my-powerful-pi --ram 4096 --cpus 4 --start
+For convenience, it is highly recommended to add the tool directories to your system PATH. This allows you to run commands like clone-vm from any location in your terminal without having to type the full path.
 
-Your new virtual Pi will be created and will appear in the VirtualBox Manager. After it starts, it will be visible on your local network, ready for use.
+1.  Move the extracted dist folder to a more permanent location. A common choice is to place it in your home directory.
+
+        mv dist ~/pi-server-vm-tools
+
+2.  Open the configuration file for your shell in a text editor. On modern macOS versions, the default shell is Zsh, and the file is .zshrc.
+
+        nano ~/.zshrc
+
+3.  Add the following lines to the very end of the file. This tells your terminal where to find the new executables. Make sure to replace /Users/your-username with the actual path to your home directory.
+
+        # Add Pi-Server-VM tools to the system PATH
+        export PATH="$PATH:/Users/your-username/pi-server-vm-tools/clone-vm"
+        export PATH="$PATH:/Users/your-username/pi-server-vm-tools/create-master-vm"
+        export PATH="$PATH:/Users/your-username/pi-server-vm-tools/pi-selfhosting-web"
+
+4.  Save the file and close the editor. For the changes to take effect, you can either close and reopen your terminal, or run the following command:
+
+        source ~/.zshrc
+
+You can now run the commands clone-vm, create-master-vm, and pi-selfhosting-web directly from your terminal.
