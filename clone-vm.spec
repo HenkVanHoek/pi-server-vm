@@ -1,7 +1,13 @@
-# clone-vm.spec (Directory Build Test)
+# clone-vm.spec (Final, Definitive Version)
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
 from PyInstaller.utils.hooks import collect_dynamic_libs
+
+# --- Platform-Specific Configuration ---
+# UPX is known to cause issues on macOS by breaking code signatures.
+# We will only enable it on non-macOS platforms.
+use_upx = sys.platform != 'darwin'
 
 block_cipher = None
 
@@ -18,21 +24,20 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
-    exclude_binaries=True, # Exclude from EXE, will be in COLLECT
+    exclude_binaries=True,
     name='clone-vm',
     console=True,
-    upx=True,
+    upx=use_upx, # Use our platform-aware variable
     version='file_version_info.txt'
 )
 
-# The COLLECT object creates the final output directory
 coll = COLLECT(
     exe,
     a.binaries,
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=use_upx, # Use our platform-aware variable
     upx_exclude=[],
     name='clone-vm'
 )
