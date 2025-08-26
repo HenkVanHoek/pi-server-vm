@@ -2,83 +2,70 @@
 
 First, thank you for considering a contribution! We welcome any help, whether it is reporting a bug, proposing a new feature, or submitting code changes.
 
-## Reporting Bugs
+## Reporting Bugs and Suggesting Enhancements
 
-- If you find a bug, please check the [Issues](https://github.com/HenkVanHoek/pi-server-vm/issues) page to see if it has already been reported.
-- If it has not, please open a new issue. Be sure to include:
-    - Your operating system (e.g., Windows 11, macOS Sonoma).
-    - The versions of VirtualBox and Python you are using.
-    - A clear description of the bug and the steps to reproduce it.
-    - Any relevant error messages or logs.
+The best way to contribute is to start a discussion.
 
-## Suggesting Enhancements
+-   **Found a Bug?** Please check the [Issues page](https://github.com/HenkVanHoek/pi-server-vm/issues) to see if it has already been reported. If not, please open a new issue with a clear description, your OS and software versions, and steps to reproduce the problem.
+-   **Have an Idea?** If you have a proposal for a new feature or an improvement, please open an issue to discuss it.
 
-If you have an idea for a new feature or an improvement to an existing one, feel free to open an issue to start a discussion.
+## Development Environment Setup
 
-## Development Setup
+To ensure consistency and the ability to perform a full end-to-end test cycle, the official and sole supported development environment for this project is **Windows (10 or 11)**.
 
-To get started with developing the scripts locally, follow these steps:
+While the Python code is cross-platform, the final release assets (the Windows installer and the VirtualBox appliance) must be created and validated on a Windows machine. Contributors on other platforms are welcome to submit code changes, but they will need access to a Windows environment (either physical or in a VM) to verify their changes completely.
 
-1.  **Fork the repository** on GitHub.
-2.  **Clone your fork** to your local machine:
+### Step 1: Install Core Software
 
-        git clone https://github.com/YourUsername/pi-server-vm.git
-        cd pi-server-vm
+You will need to install the following tools on your Windows machine:
 
-3.  **Prerequisites:** Ensure you have [Python 3.8+](https://www.python.org/) and [VirtualBox 7.x](https://www.virtualbox.org/wiki/Downloads) installed.
-4.  **Create a Virtual Environment:**
+1.  **Git for Windows:** From [git-scm.com](https://git-scm.com/).
+2.  **Python 3.11:** From [python.org](https://www.python.org/). **Important:** During installation, ensure you check the box to **"Add python.exe to PATH"**.
+3.  **PyCharm Community Edition:** The recommended IDE for this project.
+4.  **Oracle VirtualBox:** The latest version, from [virtualbox.org](https://www.virtualbox.org/).
+5.  **Inno Setup 6:** The installer compiler, from [jrsoftware.org](https://jrsoftware.org/).
+6.  **GitHub CLI (`gh`):** From [cli.github.com](https://cli.github.com/).
 
-        python -m venv .venv
-        # On Windows
-        .venv\Scripts\activate
-        # On macOS/Linux
-        source .venv/bin/activate
+### Step 2: Configure Your Environment
 
-5.  **Install Dependencies:**
+After installing the software, a few one-time configuration steps are required:
 
-        pip install requests pytest bump2version
+1.  **Authenticate GitHub CLI:** Open a Command Prompt or PowerShell and run `gh auth login`. Follow the on-screen prompts to log in to your GitHub account.
+2.  **Set Default Repository:** After you have forked and cloned the project (see next step), navigate to your local project directory in a terminal and run the following command. This links the `gh` tool to your repository fork.
 
-## Setting Up the Release Mastering Environment
+        gh repo set-default YourUsername/pi-server-vm
 
-While day-to-day development of the Python scripts can be done on any operating system (Windows, macOS, or Linux), creating an official, complete release requires a **Windows environment**. This is because the final steps of the process involve packaging the Windows installer and exporting the master VirtualBox appliance.
+### Step 3: Set Up the Project
 
-This environment can be a physical Windows PC or, for developers on other platforms, a dedicated Windows Virtual Machine.
+1.  **Fork and Clone:** Fork the `HenkVanHoek/pi-server-vm` repository on GitHub, then clone your personal fork to your local machine.
+2.  **Create Virtual Environment:** It is highly recommended to let PyCharm create a new virtual environment (named `.venv`) for the project when you first open it.
+3.  **Install Dependencies:** Open the Terminal within PyCharm (which will automatically activate your virtual environment) and run the following commands to install the project dependencies:
 
-To set up your mastering environment, you will need to install the following software **inside your Windows environment**:
+        pip install uv
+        uv pip install -e .[dev]
 
-1.  **Git for Windows**
-2.  **Python 3.11**
-3.  **`uv`** (e.g., via `pipx install uv`)
-4.  **Project Dependencies** (run `uv pip install -e .[dev]` in the project root)
-5.  **Oracle VirtualBox for Windows**
-6.  **Inno Setup 6** (from [jrsoftware.org](https://jrsoftware.org/isinfo.php))
-7.  **GitHub CLI** (`gh`)
+### Step 4: Create the Master VM Template
 
-Before you can run the `finalize` command, you must first use the `create-master-vm` tool within this environment to generate the `pi-master-template` that VirtualBox will use for the export.
+Before you can test the cloning functionality, you must have a master template. Run the creation script from the PyCharm Terminal:
+
+    python -m scripts.create_master_vm
+
+Follow the on-screen prompts to complete the manual Debian installation.
+
+### Step 5: Verify Your Setup
+
+Your development environment is now complete. You can verify that everything is working by running the entire test suite from the PyCharm Terminal:
+
+    pytest
+
+If all tests pass, your environment is perfectly configured, and you are ready to start developing.
 
 ## Submitting Changes (Pull Requests)
 
-1.  Create a new branch for your feature or bugfix. For example:
-
-        git checkout -b feature/my-new-feature
-
+1.  Create a new branch for your feature or bugfix (`git checkout -b feature/my-new-feature`).
 2.  Make your changes and commit them with a clear, descriptive commit message.
-3.  Push the branch to your fork on GitHub. For example:
-
-        git push origin feature/my-new-feature
-
-4.  Open a **Pull Request** from your branch to the **main** branch of the original repository.
+3.  Push the branch to your fork on GitHub (`git push origin feature/my-new-feature`).
+4.  Open a **Pull Request** from your branch to the `main` branch of the original `HenkVanHoek/pi-server-vm` repository.
 5.  Please provide a clear description of the changes you have made in the Pull Request.
 
-## macOS Development
-
-When you build the executables on your Mac using the build.py script, the resulting applications in the dist folder will not be code-signed. The macOS Gatekeeper security feature will prevent them from running correctly.
-
-To test your local builds, you must clear the quarantine attribute after each build. Run the following commands from the root of the project directory in your terminal.
-
-    xattr -cr dist/clone-vm
-    xattr -cr dist/create-master-vm
-    xattr -cr dist/pi-selfhosting-web
-
-This will allow you to run and test your locally-built executables. The official releases will be signed in the future, but this is the required step for all local development and testing.
 Thank you again for your contribution!
