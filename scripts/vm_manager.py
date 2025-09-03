@@ -151,6 +151,17 @@ def clone_vm(
         run(
             f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/password "{password}"'
         )
+        # Create the content for the PiSelfhosting info file
+        print("--- ACTION: Preparing PiSelfhosting identity file content ---")
+        info_file_content = f"""MODEL_NAME=PiSelfhosting Virtual Pi
+    SERIAL_NUMBER={serial}
+    HOSTNAME={target}""".strip()
+
+        # Set the content as a new Guest Property
+        run(
+            f'VBoxManage guestproperty set "{target}" /VirtualBox/GuestAdd/PiSelfhostingInfo "{info_file_content}"'
+        )
+        print("✅ PiSelfhosting identity file content has been set.")
 
     # Apply optional hardware customizations
     if ram:
