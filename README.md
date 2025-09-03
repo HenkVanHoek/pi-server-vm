@@ -7,22 +7,21 @@ A set of cross-platform tools to fully automate the creation and management of s
 This project provides a complete ecosystem for virtual machine management, from creation to deployment.
 
 #### Core Functionality
-- **Automated Master Template Creation:** A command-line tool, create-master-vm, that downloads the latest Debian ISO and builds a "golden master" VM template from scratch.
-- **One-Command Cloning:** A tool, clone-vm, to create new, independent development VMs from the master template in seconds.
+- **Automated Master Template Creation:** A command-line tool, **create-master-vm**, that downloads the latest Debian ISO and builds a "golden master" VM template from scratch.
+- **One-Command Cloning:** A tool, **clone-vm**, to create new, independent development VMs from the master template in seconds.
 - **Web UI for VM Creation:** A simple web interface to create and customize new clone VMs directly from your browser, without needing to use the command line.
 
 #### Professional User Experience
-- **Professional Windows Installer:** A single, easy-to-use setup.exe for a one-click setup on Windows, complete with Start Menu shortcuts.
-- **Pre-Built Virtual Appliance:** A ready-to-import .ova file is included in each release, allowing users on any platform to get started instantly without building the template themselves.
+- **Professional Windows Installer:** A single, easy-to-use **setup.exe** for a one-click setup on Windows, complete with Start Menu shortcuts.
+- **Pre-Built Virtual Appliance:** A ready-to-import **.ova** file is included in each release, allowing users on any platform to get started instantly without building the template themselves.
 - **Cross-Platform Tools:** All command-line tools are provided as standalone executables for Windows, macOS, and Linux.
 
 #### VM & Network Features
 - **LAN Accessible:** Cloned VMs are configured as full citizens on your local network, discoverable and accessible from any other computer.
-- **Network Discovery (mDNS):** Clones announce themselves on the network using Avahi, appearing as hostname.local, just like a real Raspberry Pi.
+- **Network Discovery (mDNS):** Clones announce themselves on the network using Avahi, appearing as **hostname.local**, just like a real Raspberry Pi.
 - **User-Friendly Console:** The IP address of the VM is displayed directly on the console login screen for immediate, easy SSH access.
 - **Secure by Default:** The master template is configured with a locked root account and a standard user with **sudo** privileges.
-
----
+- **Ecosystem Integration:** Each clone is automatically provisioned with a unique identity file at **/etc/piselfhosting-virtual-pi-server**. This file contains the model name, a unique serial number, and the hostname, allowing for easy discovery and management by other tools in the PiSelfhosting ecosystem, such as the **pi-scanner**.
 
 ## Installation
 

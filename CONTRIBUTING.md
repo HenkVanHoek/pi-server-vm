@@ -60,6 +60,32 @@ Your development environment is now complete. You can verify that everything is 
 
 If all tests pass, your environment is perfectly configured, and you are ready to start developing.
 
+## Core Architectural Concepts
+
+This section explains some of the key design patterns used in the project.
+
+### Host-to-Guest Communication and First-Boot Provisioning
+
+A key feature of this project is the ability to customize a cloned VM on its first boot. This is achieved through a robust, two-part mechanism using **VirtualBox Guest Properties**, which is the official and recommended method for passing data from the host machine to the guest VM.
+
+This avoids fragile and insecure methods like direct filesystem injection.
+
+**1. Host-Side (The "Sender")**
+
+- The **scripts/vm_manager.py** script is responsible for all direct interaction with the VirtualBox command-line tools.
+- In the **clone_vm** function, after a new VM is cloned, the script sets several Guest Properties using the **VBoxManage guestproperty set** command.
+- For example, it creates the content for the PiSelfhosting identity file and injects it into the **/VirtualBox/GuestAdd/PiSelfhostingInfo** property for that specific VM.
+
+**2. Guest-Side (The "Receiver")**
+
+- The **pi-master-template** is a "smart" image. It contains a one-shot **systemd** service located at **/etc/systemd/system/pivm-info.service**.
+- On the very first boot of a new clone, this service runs a script located at **/usr/local/bin/pivm-info-writer.sh**.
+- This script uses the **VBoxControl guestproperty get** command (which is part of the VirtualBox Guest Additions) to read the data that the host has set.
+- It then writes this data to the final destination file (e.g., **/etc/piselfhosting-virtual-pi-server**).
+- As its final step, the script disables its own systemd service, ensuring it will never run again on subsequent boots.
+
+This architecture allows for a clean separation of concerns and provides a flexible and secure way to provision new VMs with unique identities.
+
 ## Submitting Changes (Pull Requests)
 
 1.  Create a new branch for your feature or bugfix (`git checkout -b feature/my-new-feature`).
