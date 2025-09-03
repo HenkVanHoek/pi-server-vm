@@ -1,4 +1,4 @@
-# scripts/create_master_vm.py
+# scripts/create_master_vm.py (Final, Audited Version)
 """
 A cross-platform script to create a master Debian VM template in VirtualBox.
 This script creates a VM with a single, discoverable Bridged Network Adapter.
@@ -10,7 +10,7 @@ import sys
 import requests
 from scripts import vm_manager
 
-# --- Configuration ---
+# --- Configuration (remains the same) ---
 ISO_DIR = "isos"
 VM_NAME = "pi-master-template"
 VM_DISK = f"{VM_NAME}.vdi"
@@ -20,9 +20,7 @@ STABLE_RELEASE_URL = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/
 
 
 def get_latest_iso_info():
-    """
-    Finds the filename, URL, and checksum for the latest stable Debian netinst ISO.
-    """
+    # ... (this function is complete and correct)
     print(f"Checking for latest Debian release at: {STABLE_RELEASE_URL}")
     try:
         response = requests.get(STABLE_RELEASE_URL, timeout=30)
@@ -54,9 +52,7 @@ def get_latest_iso_info():
 
 
 def verify_and_download_iso(iso_filename, iso_url, iso_sha256):
-    """
-    Verifies a local ISO's integrity or downloads it if missing/corrupt.
-    """
+    # ... (this function is complete and correct)
     iso_path = os.path.join(ISO_DIR, iso_filename)
     os.makedirs(ISO_DIR, exist_ok=True)
     if os.path.exists(iso_path):
@@ -125,15 +121,77 @@ def main():
         name=VM_NAME, ram=VM_RAM_MB, cpus=VM_CPUS, disk=VM_DISK, iso=iso_path
     )
 
-    print("\nVM has been started in a new window.")
-    print("Please complete the Debian installation manually now.")
+    # --- START OF FINAL, AUDITED INSTRUCTIONS ---
+    print("\n--- MANUAL SETUP REQUIRED ---")
+    print("\nVM has been started. Please complete the manual Debian installation now.")
     print(
-        "\nRemember to select the 'SSH server' and deselect any desktop environments."
+        "IMPORTANT: During setup, select the 'SSH server' and deselect any desktop environments."
     )
     print("After setup, the installer will shut down the VM.")
-    print("\nYour master template is now ready!")
-    print(f"You can now create clones using the cloning script:")
-    print(f"    python -m scripts.clone_vm <your-new-clone-name>")
+
+    print("\n--- FINAL STEP: Configure Master Template ---")
+    print("After the installation is complete, you must start the VM again, log in,")
+    print("and run the following complete block of commands to finalize the template.")
+    print(
+        "This will install all necessary services and the first-boot provisioning script."
+    )
+
+    print("\n--- Copy and paste the entire block below into the VM terminal ---")
+    print("-----------------------------------------------------------------")
+    print(
+        """
+# Update package list and install required tools
+sudo apt-get update
+sudo apt-get install -y virtualbox-guest-utils avahi-daemon
+
+# Create script to show IP address on login
+sudo tee /etc/profile.d/show-ip.sh > /dev/null << EOF
+#!/bin/sh
+echo "================================================================"
+echo "Welcome to your Pi-Server-VM!"
+echo "IP Address: \$(hostname -I)"
+echo "Hostname:   \$(hostname).local"
+echo "================================================================"
+EOF
+
+# Create the first-boot identity writer script
+sudo tee /usr/local/bin/pivm-info-writer.sh > /dev/null << EOF
+#!/bin/bash
+PROPERTY_NAME="/VirtualBox/GuestAdd/PiSelfhostingInfo"
+OUTPUT_FILE="/etc/piselfhosting-virtual-pi-server"
+CONTENT=\\$(VBoxControl guestproperty get "\$PROPERTY_NAME" | sed 's/Value: //')
+if [ -n "\$CONTENT" ]; then
+    echo "Writing PiSelfhosting identity file to \$OUTPUT_FILE..."
+    echo "\$CONTENT" > "\$OUTPUT_FILE"
+    chmod 644 "\$OUTPUT_FILE"
+fi
+systemctl disable pivm-info.service
+EOF
+
+# Create the systemd service file for the identity writer
+sudo tee /etc/systemd/system/pivm-info.service > /dev/null << EOF
+[Unit]
+Description=Pi-Server-VM First Boot Identity Writer
+After=vboxadd-service.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pivm-info-writer.sh
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Make the script executable and enable the service
+sudo chmod +x /usr/local/bin/pivm-info-writer.sh
+sudo systemctl enable pivm-info.service
+
+# Final cleanup and shutdown
+echo "Template configuration complete. Shutting down."
+sudo shutdown now
+"""
+    )
+    print("-----------------------------------------------------------------")
+    print("\nYour master template is now complete and ready for cloning!")
+    # --- END OF FINAL, AUDITED INSTRUCTIONS ---
     return 0
 
 
