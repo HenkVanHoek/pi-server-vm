@@ -1,0 +1,19 @@
+site_name: Pi-Server-VM Documentation
+theme:
+  name: material
+
+nav:
+  - 'Home': 'index.md'
+  - 'Installation':
+      - 'Windows': 'install/INSTALL_WINDOWS.md'
+      - 'macOS': 'install/INSTALL_MACOS.md'
+      - 'Linux': 'install/INSTALL_LINUX.md'
+  - 'Contributing': 'CONTRIBUTING.md'
+
+# --- START OF NEW SECTION ---
+# This section enables advanced Markdown features, including Mermaid diagrams.
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.mermaid:
+      label: 'Mermaid'
+# --- END OF NEW SECTION ---
