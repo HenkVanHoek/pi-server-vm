@@ -3,6 +3,15 @@
 The Pi-Server VM provides a virtual machine (VM) specifically designed for testing the PiSelfhosting project and its services. It’s a universal testing platform, capable of running on a diverse range of hardware – from the Raspberry Pi 5 to powerful systems supporting demanding applications like Nextcloud with multiple camera streams (e.g., for NVR systems), Jellyfin, Plex, GitLab runners, and Home Assistant. **In my home setup, the Raspberry Pi 5 with 8GB of RAM and a 1TB M2 SSD was perfectly capable of running Home Assistant, Frigate with 4 cameras and person detection, and Nextcloud – even with the Google TPU – demonstrating the project’s versatility.**
 
 The PiSelfhosting project was conceived with a focus on simplicity and flexibility. Recognizing the potential complexity of managing numerous services, the initial design leveraged Docker to isolate each component – Nextcloud, Jellyfin, Plex, Frigate, and more – within its own environment. This approach eliminated dependency conflicts and simplified troubleshooting.
+
+    graph TD
+        A["User runs create-master-vm tool"] --> B["pi-master-template VM is created in VirtualBox"];
+        B --> C["User runs clone-vm tool"];
+        C --> D["New Clone VM (e.g., 'my-dev-pi') is created"];
+        D --> E["Clone boots for the first time"];
+        E --> F["First-boot service runs, sets unique hostname & identity"];
+        F --> G["Clone is ready on the network at my-dev-pi.local"];
+
 ## Features
 
 This project provides a complete ecosystem for virtual machine management, from creation to deployment.

@@ -24,7 +24,10 @@ dev = [
     "bump-my-version",
     "pyinstaller",
     "pre-commit",
-    "uv"
+    "uv",
+    "mkdocs",
+    "mkdocs-material",
+    "pymdown-extensions"
 ]
 
 [tool.setuptools.packages.find]
