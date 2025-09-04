@@ -11,6 +11,7 @@ repos:
       - id: trailing-whitespace  # Removes trailing whitespace
       - id: end-of-file-fixer    # Ensures files end in a newline
       - id: check-yaml           # Checks YAML files for syntax errors
+        exclude: ^mkdocs\.yml$
       - id: check-added-large-files # Prevents committing large files (>500kb)
 
   # A hook for formatting Python code according to PEP 8

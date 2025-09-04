@@ -1,6 +1,14 @@
 site_name: Pi-Server-VM Documentation
 theme:
   name: material
+  # --- START OF NEW SECTION ---
+  # This section enables extra features of the Material theme.
+  # We are telling it to load the necessary JavaScript for Mermaid.
+  features:
+    - navigation.tabs
+    - content.code.annotate
+    - mermaid
+  # --- END OF NEW SECTION ---
 
 nav:
   - 'Home': 'index.md'
@@ -10,10 +18,10 @@ nav:
       - 'Linux': 'install/INSTALL_LINUX.md'
   - 'Contributing': 'CONTRIBUTING.md'
 
-# --- START OF NEW SECTION ---
-# This section enables advanced Markdown features, including Mermaid diagrams.
+# This section is correct and remains the same.
 markdown_extensions:
-  - pymdownx.superfences
-  - pymdownx.mermaid:
-      label: 'Mermaid'
-# --- END OF NEW SECTION ---
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
