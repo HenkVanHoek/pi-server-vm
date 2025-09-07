@@ -350,7 +350,7 @@ def handle_finalize():
     ova_path = export_vm(latest_tag)
 
     # The downloader executable is built on CI and included in the downloaded zip.
-    downloader_path = os.path.join("dist", "download-assets.exe")
+    downloader_path = os.path.join("dist", "download-assets", "download-assets.exe")
 
     upload_assets(latest_tag, [installer_path, ova_path, downloader_path])
 
