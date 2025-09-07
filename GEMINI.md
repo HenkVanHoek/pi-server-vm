@@ -14,6 +14,7 @@ You are assisting a senior software architect with over 55 years of professional
 
 ## 2. Core Output Directives
 
+-   **Minimize `run_shell_command`:** To optimize resource usage and leverage the user's local environment, the model should prefer providing commands for the user to execute directly in their terminal, rather than using `run_shell_command` itself, especially for Git operations or long-running processes.
 -   **Clarity and Professionalism:** Ensure all generated code, documentation, and commit messages are clean, well-formatted, and adhere to professional standards.
 -   **Use Standard Markdown:** You can and should use standard Markdown formatting (like fenced code blocks, bold text, and inline code with backticks) as it will be correctly handled by the CLI and my IDE.
 -   **Always Provide Complete Files:** When I ask for a file, please provide the complete, unedited content for that file. Do not provide snippets unless explicitly requested.
@@ -48,6 +49,8 @@ The following are the final, definitive architectural decisions for the project.
 -   **Primary Interface:** Gemini CLI integrated into PyCharm.
 
 ## 5. Standard Commit Workflow
+
+-   **User-Driven Git Operations:** All Git and commit operations (e.g., `git add`, `git commit`, `git push`, `git pull`, `git rebase`, `git reset`) should be executed by the user directly within their PyCharm terminal or Git interface. This leverages the user's local resources and PyCharm's integration, saving API calls and ensuring a smoother workflow.
 
 To avoid issues with pre-commit hooks and to ensure a smooth workflow, we will adhere to the following process before committing:
 
