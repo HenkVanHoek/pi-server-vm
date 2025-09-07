@@ -27,7 +27,8 @@ dev = [
     "uv",
     "mkdocs",
     "mkdocs-material",
-    "pymdown-extensions"
+    "pymdown-extensions",
+    "python-dotenv"
 ]
 
 [tool.setuptools.packages.find]

@@ -1,9 +1,0 @@
-# Project Dependencies
-requests
-Flask
-
-# Development and Testing Dependencies
-bump2version
-pytest
-pre-commit
-pyinstaller
