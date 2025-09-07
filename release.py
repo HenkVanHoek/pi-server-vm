@@ -42,16 +42,6 @@ import argparse
 from dotenv import load_dotenv
 
 
-def safe_print(text):
-    """Prints text to the console, safely handling Unicode for all terminals."""
-    if text:
-        print(
-            text.encode("utf-8", errors="replace").decode(
-                sys.stdout.encoding, errors="replace"
-            )
-        )
-
-
 # --- Logic Functions (Designed for Testability) ---
 
 
@@ -73,7 +63,7 @@ def is_git_clean():
 
 def check_git_sync_status():
     """Performs a pre-flight check to ensure the local repository is in sync with the remote."""
-    safe_print("🔎 Checking Git repository sync status...")
+    print("🔎 Checking Git repository sync status...")
     try:
         subprocess.run(["git", "fetch"], check=True, capture_output=True, text=True)
         status_result = subprocess.run(
@@ -81,28 +71,28 @@ def check_git_sync_status():
         )
         output = status_result.stdout
         if "Your branch is up to date" in output:
-            safe_print("✅ Git repository is in sync with the remote.")
+            print("✅ Git repository is in sync with the remote.")
             return True
         elif "Your branch is behind" in output:
-            safe_print(
+            print(
                 "❌ GIT SYNC ERROR: Your local branch is behind the remote.",
             )
-            safe_print("   Please run 'git pull' to update your local code.")
+            print("   Please run 'git pull' to update your local code.")
             sys.exit(1)
         elif "Your branch is ahead" in output:
-            safe_print(
+            print(
                 "❌ GIT SYNC ERROR: Your local branch has unpushed commits.",
             )
-            safe_print("   Please run 'git push' to publish your changes.")
+            print("   Please run 'git push' to publish your changes.")
             sys.exit(1)
         elif "have diverged" in output:
-            safe_print(
+            print(
                 "❌ GIT SYNC ERROR: Your local branch has diverged from the remote.",
             )
-            safe_print("   Please rebase or merge with the remote branch.")
+            print("   Please rebase or merge with the remote branch.")
             sys.exit(1)
     except subprocess.CalledProcessError as e:
-        safe_print(
+        print(
             f"❌ An error occurred while checking Git status: {e.stderr}",
         )
         sys.exit(1)
@@ -110,21 +100,21 @@ def check_git_sync_status():
 
 def run_and_check(command, check_name):
     """Runs a command, checks for errors, and exits on failure."""
-    safe_print(f"--- CHECK: {check_name} ---")
+    print(f"--- CHECK: {check_name} ---")
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
-        safe_print("--- PASSED ---")
+        print("--- PASSED ---")
     except subprocess.CalledProcessError as e:
-        safe_print(f"--- FAILED: {check_name} ---")
-        safe_print("--- REASON ---")
-        safe_print(e.stderr)
-        safe_print("Aborting release. No files have been changed.")
+        print(f"--- FAILED: {check_name} ---")
+        print("--- REASON ---")
+        print(e.stderr)
+        print("Aborting release. No files have been changed.")
         sys.exit(1)
 
 
 def get_latest_tag():
     """Finds the latest Git tag in the repository."""
-    safe_print("🔎 Finding latest Git tag...")
+    print("🔎 Finding latest Git tag...")
     try:
         result = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
@@ -133,10 +123,10 @@ def get_latest_tag():
             text=True,
         )
         tag_name = result.stdout.strip()
-        safe_print(f"✅ Found latest tag: {tag_name}")
+        print(f"✅ Found latest tag: {tag_name}")
         return tag_name
     except subprocess.CalledProcessError:
-        safe_print("❌ Could not find any Git tags in the repository.")
+        print("❌ Could not find any Git tags in the repository.")
         sys.exit(1)
 
 
@@ -152,7 +142,7 @@ def get_current_version_from_tag(tag_name):
 
 def download_windows_artifacts(tag_name):
     """Downloads and prepares the raw Windows executables from a release."""
-    safe_print(f"--- ACTION: Downloading Windows artifacts for {tag_name} ---")
+    print(f"--- ACTION: Downloading Windows artifacts for {tag_name} ---")
     if os.path.isdir("dist"):
         shutil.rmtree("dist")
     os.makedirs("dist")
@@ -171,15 +161,13 @@ def download_windows_artifacts(tag_name):
             check=True,
             text=True,
         )
-        safe_print("✅ Download complete. Unzipping artifact...")
+        print("✅ Download complete. Unzipping artifact...")
         shutil.unpack_archive("executables-Windows.zip", "dist")
         os.remove("executables-Windows.zip")
-        safe_print("✅ Artifacts are ready in the 'dist' directory.")
+        print("✅ Artifacts are ready in the 'dist' directory.")
     except subprocess.CalledProcessError:
-        safe_print(
-            f"❌ FATAL ERROR: Failed to download release assets for tag {tag_name}."
-        )
-        safe_print(
+        print(f"❌ FATAL ERROR: Failed to download release assets for tag {tag_name}.")
+        print(
             "   Does the release exist and does it contain the 'executables-Windows.zip' asset?"
         )
         sys.exit(1)
@@ -187,33 +175,33 @@ def download_windows_artifacts(tag_name):
 
 def create_windows_installer(version):
     """Uses Inno Setup to create the installer. Returns the path to the installer."""
-    safe_print("--- ACTION: Creating Windows installer with Inno Setup ---")
+    print("--- ACTION: Creating Windows installer with Inno Setup ---")
     iss_file = "installer.iss"
     iscc_path = "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe"
     installer_path = os.path.join("dist", f"pi-server-vm-setup-{version}.exe")
     command = [iscc_path, "/Q", f"/DMyVersion={version}", iss_file]
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
-        safe_print(f"✅ Windows installer created: {installer_path}")
+        print(f"✅ Windows installer created: {installer_path}")
         return installer_path
     except FileNotFoundError:
-        safe_print(f"❌ FATAL ERROR: Inno Setup compiler not found at '{iscc_path}'.")
+        print(f"❌ FATAL ERROR: Inno Setup compiler not found at '{iscc_path}'.")
         sys.exit(1)
     except subprocess.CalledProcessError as e:
-        safe_print("❌ FATAL ERROR: Inno Setup compiler failed.")
-        safe_print(e.stdout)
-        safe_print(e.stderr)
+        print("❌ FATAL ERROR: Inno Setup compiler failed.")
+        print(e.stdout)
+        print(e.stderr)
         sys.exit(1)
 
 
 def export_vm(tag_name):
     """Exports the master VM. Returns the path to the .ova file."""
-    safe_print("--- ACTION: Exporting master template Virtual Machine ---")
-    safe_print(f"         -> This may take several minutes...")
+    print("--- ACTION: Exporting master template Virtual Machine ---")
+    print(f"         -> This may take several minutes...")
     MASTER_VM_NAME = "pi-master-template"
     ova_path = os.path.join("dist", f"pi-server-template-{tag_name}.ova")
     if os.path.exists(ova_path):
-        safe_print(f"   -> Found pre-existing artifact. Deleting: {ova_path}")
+        print(f"   -> Found pre-existing artifact. Deleting: {ova_path}")
         os.remove(ova_path)
     try:
         subprocess.run(
@@ -222,20 +210,20 @@ def export_vm(tag_name):
             capture_output=True,
             text=True,
         )
-        safe_print(f"✅ VM exported successfully: {ova_path}")
+        print(f"✅ VM exported successfully: {ova_path}")
         return ova_path
     except FileNotFoundError:
-        safe_print("❌ FATAL ERROR: 'VBoxManage' command not found.")
+        print("❌ FATAL ERROR: 'VBoxManage' command not found.")
         sys.exit(1)
     except subprocess.CalledProcessError as e:
-        safe_print(f"❌ FATAL ERROR: Failed to export the VM.")
-        safe_print(e.stderr)
+        print(f"❌ FATAL ERROR: Failed to export the VM.")
+        print(e.stderr)
         sys.exit(1)
 
 
 def upload_assets(tag_name, asset_paths):
     """Uploads a list of asset files to a specific GitHub release."""
-    safe_print(f"--- ACTION: Uploading final assets to release {tag_name} ---")
+    print(f"--- ACTION: Uploading final assets to release {tag_name} ---")
     max_retries = 10
     for attempt in range(max_retries):
         try:
@@ -243,104 +231,104 @@ def upload_assets(tag_name, asset_paths):
             command.extend(asset_paths)
             command.append("--clobber")
             result = subprocess.run(command, check=True, capture_output=True, text=True)
-            safe_print("✅ All assets uploaded successfully.")
-            safe_print(result.stdout)
+            print("✅ All assets uploaded successfully.")
+            print(result.stdout)
             return
         except FileNotFoundError:
-            safe_print("❌ FATAL ERROR: 'gh' command not found.")
+            print("❌ FATAL ERROR: 'gh' command not found.")
             sys.exit(1)
         except subprocess.CalledProcessError as e:
             if "release not found" in e.stderr:
                 if attempt < max_retries - 1:
-                    safe_print(
+                    print(
                         f"   -> Release page not found yet. Waiting 30 seconds... "
                         f"({attempt + 1}/{max_retries})"
                     )
                     time.sleep(30)
                 else:
-                    safe_print("❌ FATAL ERROR: Release was not found after 5 minutes.")
+                    print("❌ FATAL ERROR: Release was not found after 5 minutes.")
                     sys.exit(1)
             else:
-                safe_print(f"❌ FATAL ERROR: Failed to upload release assets.")
-                safe_print(e.stderr)
+                print(f"❌ FATAL ERROR: Failed to upload release assets.")
+                print(e.stderr)
                 sys.exit(1)
 
 
 def handle_deploy_docs():
     """Builds the MkDocs site and deploys it to the production webserver."""
-    safe_print("--- ACTION: Building and deploying documentation website ---")
+    print("--- ACTION: Building and deploying documentation website ---")
 
     # 1. Load environment variables and check for the destination path
     load_dotenv()
     deploy_path = os.getenv("DOCS_DEPLOY_PATH")
     if not deploy_path:
-        safe_print("❌ FATAL ERROR: 'DOCS_DEPLOY_PATH' not set in your .env file.")
-        safe_print(
+        print("❌ FATAL ERROR: 'DOCS_DEPLOY_PATH' not set in your .env file.")
+        print(
             "   Please create a .env file and add the full path "
             "to your webserver's document root."
         )
         sys.exit(1)
 
-    safe_print(f"   -> Target deployment path: {deploy_path}")
+    print(f"   -> Target deployment path: {deploy_path}")
     if not os.path.isdir(deploy_path):
-        safe_print(
+        print(
             f"❌ FATAL ERROR: The path specified in"
             f" DOCS_DEPLOY_PATH is not a valid directory."
         )
         sys.exit(1)
 
     # 2. Build the static site
-    safe_print("   -> Building static site with 'mkdocs build'...")
+    print("   -> Building static site with 'mkdocs build'...")
     try:
         subprocess.run(
             ["python", "-m", "mkdocs", "build", "--clean"],
             check=True,
             capture_output=True,
         )
-        safe_print("✅ MkDocs build complete. Output is in 'site/' directory.")
+        print("✅ MkDocs build complete. Output is in 'site/' directory.")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        safe_print("❌ FATAL ERROR: 'mkdocs build' failed. Is MkDocs installed?")
+        print("❌ FATAL ERROR: 'mkdocs build' failed. Is MkDocs installed?")
         if isinstance(e, subprocess.CalledProcessError):
-            safe_print(e.stderr)
+            print(e.stderr)
         sys.exit(1)
 
     # 3. Copy the site to the destination
     source_dir = "site/"
-    safe_print(f"   -> Copying '{source_dir}' to '{deploy_path}'...")
+    print(f"   -> Copying '{source_dir}' to '{deploy_path}'...")
     try:
         # Use shutil.copytree for a robust, cross-platform directory copy
         shutil.copytree(source_dir, deploy_path, dirs_exist_ok=True)
-        safe_print("✅ Documentation deployed successfully!")
+        print("✅ Documentation deployed successfully!")
     except Exception as e:
-        safe_print(f"❌ FATAL ERROR: Failed to copy site directory.")
-        safe_print(f"   Reason: {e}")
+        print(f"❌ FATAL ERROR: Failed to copy site directory.")
+        print(f"   Reason: {e}")
         sys.exit(1)
 
 
 def handle_version_bump(part):
     """Handles the 'patch', 'minor', or 'major' commands."""
-    safe_print(f"🚀 Starting fully automated release process for a '{part}' update...")
+    print(f"🚀 Starting fully automated release process for a '{part}' update...")
     check_git_sync_status()
-    safe_print("--- CHECK: Is Git working directory clean? ---")
+    print("--- CHECK: Is Git working directory clean? ---")
     if not is_git_clean():
-        safe_print("--- FAILED: Is Git working directory clean? ---")
-        safe_print("Your working directory has uncommitted changes.")
+        print("--- FAILED: Is Git working directory clean? ---")
+        print("Your working directory has uncommitted changes.")
         sys.exit(1)
-    safe_print("--- PASSED ---")
+    print("--- PASSED ---")
     run_and_check(["git", "push", "--dry-run"], "Can connect and push to remote?")
     run_and_check(
         ["bump-my-version", "bump", part, "--tag", "--dry-run"],
         f"Can bump-my-version perform a '{part}' bump?",
     )
-    safe_print("✅ All pre-flight checks passed. Proceeding with release.")
-    safe_print(f"--- ACTION: Bumping version with bump-my-version ({part}) ---")
+    print("✅ All pre-flight checks passed. Proceeding with release.")
+    print(f"--- ACTION: Bumping version with bump-my-version ({part}) ---")
     subprocess.run(["bump-my-version", "bump", part, "--tag"], check=True, text=True)
-    safe_print("--- ACTION SUCCEEDED ---")
-    safe_print("--- ACTION: Pushing new commit and tag to remote ---")
+    print("--- ACTION SUCCEEDED ---")
+    print("--- ACTION: Pushing new commit and tag to remote ---")
     subprocess.run(["git", "push", "--follow-tags"], check=True, text=True)
-    safe_print("--- ACTION SUCCEEDED ---")
-    safe_print("🎉 Release successful! A new version has been tagged and pushed.")
-    safe_print(
+    print("--- ACTION SUCCEEDED ---")
+    print("🎉 Release successful! A new version has been tagged and pushed.")
+    print(
         "   Wait for the GitHub Action to complete,"
         " then run: python release.py finalize"
     )
@@ -349,12 +337,10 @@ def handle_version_bump(part):
 def handle_finalize():
     """Handles the 'finalize' command."""
     if sys.platform != "win32":
-        safe_print(
-            "Error: The 'finalize' command can only be run on a Windows machine."
-        )
+        print("Error: The 'finalize' command can only be run on a Windows machine.")
         sys.exit(1)
 
-    safe_print("🚀 Starting final release mastering process...")
+    print("🚀 Starting final release mastering process...")
 
     latest_tag = get_latest_tag()
     version = get_current_version_from_tag(latest_tag)
@@ -368,8 +354,8 @@ def handle_finalize():
 
     upload_assets(latest_tag, [installer_path, ova_path, downloader_path])
 
-    safe_print("\n🎉 Final release mastering complete! All assets are uploaded. 🎉")
-    safe_print("\nTo deploy the documentation, run: python release.py deploy-docs")
+    print("\n🎉 Final release mastering complete! All assets are uploaded. 🎉")
+    print("\nTo deploy the documentation, run: python release.py deploy-docs")
 
 
 # Handles the different release commands using argparse.
